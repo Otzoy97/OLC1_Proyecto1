@@ -20,7 +20,9 @@ import java.util.LinkedList;
 %char
 %ignorecase
 //RE
-Comentario = ("<!" [^/] ~"!>") |("<!" "!"+ "!>")
+ComentarioHTML = ("<!" [^/] ~"!>") |("<!" "!"+ "!>")
+Comentario = "//" [^\r\n]* [^\r\n]
+ComentarioMulti = ("/*" [^/] ~"*/") |("/*" "/"+ "*/")
 Entero = [0-9]+
 Cadena =[\"][^\"\n]*[\"\n]
 Decimal = {Entero}.{Entero}
@@ -107,7 +109,9 @@ Espacio = \t\f|" "|\r|\n
     return new Symbol(sym.DIFERENTE,yycolumn,yyline,yytext());
 }
 
+{ComentarioHTML}{}
 {Comentario}{}
+{ComentarioMulti}{}
 {Espacio}{}
 
 .{
