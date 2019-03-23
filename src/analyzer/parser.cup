@@ -1,1 +1,414 @@
+package analyzer;
+
+import java_cup.runtime.Symbol;
+import OLC1_PROYECTO1.html.*;
+import java.util.Queue;
+import java.util.LinkedList;
+import java.util.HashMap;
+
+parser code{:
+    public Html html_file;
+    public ArrayList<Variable> listaVariable = new ArrayList();
+    //public Queue<ComponentHTML> cuerpoHTML = new Queue();
+    /*Errores*/
+    public void syntax_error (Symbol s){
+        Scanner.Err += "Leve. Línea: " + s.right + ", Columna: " + s.left + ". Identificador: " + s.value + "\n";
+    }
+    public void unrecovered_syntax_error(Symbol s){ 
+        Scanner.Err += "Grave. Línea: " + s.right + ", Columna: " + s.left + ". Identificador: " + s.value +"\n";
+    }
+    /**
+     * @param idVar identificador de la variable a buscar
+     * return double que se encontró en la lista
+     */
+    public double getDouble(String idVar){
+        double cifra = 0;
+        for (Variable var : listaVariable){
+            if(var.getIdentificador().equals(idVar)){
+                cifra = var.getDecimal();
+            }
+        }
+        return cifra;
+    }
+    /**
+     * @param idVar identificador de la variable a buscar
+     * return string que se encontró en la lista
+     */
+    public String getString(String idVar){
+        String cadena = "";
+        for(Variable var : listaVariable){
+            if(var.getIdentificador().equals(idVar)){
+                cadena = var.getCadena();
+            }
+        }
+    }
+    /**
+     * @param idVar identificador de la variable a buscar
+     * return booleano que se encontró en la lista
+     */
+    public boolean getBoolean(String idVar){
+        for(Variable var: listaVariable){
+            if(var.getIdentificador().equals(idVar)){
+                return var.getBooleano();
+            }
+        }
+        return false;
+    }
+    /**
+     * @param idVar identificador de la variable a buscar
+     * return entero que se encontró en la lista
+     */
+    public int getInt(String idVar){
+        int cifra = 0;
+        for(Variable var : listaVariable){
+            if (var.getIdentificador(.equals(idVar))){
+                cifra = var.getEntero();
+            }
+        }
+        return cifra;
+    }
+
+:}
+
+action code{::}
+/*Terminales*/
+//AGRUAPCION
+terminal PARDER, PARIZQ, LLVDER, LLVIZQ, CORDER, CORIZQ;
+//ARITMETICOS
+terminal MAS, MENOS, PRODUCTO, DIVISION, IGUAL;
+//LOGICOS
+terminal AND, OR, NOT, MAYOR_QUE, MENOR_QUE, MENOR_QUE_IGUAL, MAYOR_QUE_IGUAL, IGUAL_IGUAL, DIFERENTE;
+//PUNTUACION
+terminal SEMICOLON, DOT, COMMA;
+//ETIQUETA HTML
+terminal COMPI_INICIO, COMPI_FINAL;
+terminal CABEZA_INICIO, CABEZA_FINAL;
+terminal TITULO_INICIO, TITULO_FINAL;
+terminal CUERPO_INICIO, FONDO, CUERPO_FINAL;
+terminal ESPACIO_INICIO, ESPACIO_FINAL;
+terminal PARRAFO_INICIO, ALINEACION, PARRAFO_FINAL;
+terminal SALTO;
+terminal TEXTOA_INICIO, TEXTOA_FINAL, TEXTOB_INICIO, TEXTOB_FINAL;
+terminal IMAGEN_INICIO, PATH, ALTO, ANCHO. IMAGEN_FINAL;
+terminal BOTON_INICIO, ID, TEXTO,  BOTON_FINAL;
+terminal TABLA_INICIO, BORDE, TABLA_FINAL;
+terminal FILA_INICIO, FILA_FINAL;
+terminal COLUMNA_INICIO, COLUMNA_FINAL;
+terminal COLUMNAC_INICIO, COLUMNAC_FINAL;
+terminal HSCRIPT_INICIO, HSCRIPT_FINAL;
+terminal String PLAINTEXT;
+//ETIQUETA HSCRTIPT
+terminal IF, ELSE, ECHO, REPETIR;
+terminal CREARIMAGEN, GETPATH, GETANCHO, GETALTO, SETPATH, SETANCHO, SETALTO;
+terminal CREARPARRAFO, SETCONTENIDO, GETCONTENIDO, SETALINEACION, GETALINEACION;
+terminal CREARTEXTOA, CREARTEXTOB;
+terminal CREARTABLA, SETBORDE, GETBORDE;
+terminal CREARBOTON, SETTEXTO, GETTEXTO, SETID, CLICKBOTON;
+terminal IDENTIFICADOR, ESTRUCTURA
+//GENERAL
+terminal String CADENA;
+terminal int ENTERO;
+terminal Double DECIMAL;
+terminal VERDADERO, FALSO;
+/**-----NO TERMINALES-----**/
+non terminal INICIO;
+//HTML
+non terminal Head CABECERA ;
+non terminal ComponentHTML TITULO;
+non terminal Body CUERPO;
+non terminal Queue<ComponentHTML> BODY;
+non terminal ComponentHTML SUBBODY;
+
+non terminal ComponentHTML ESPACIO, PARRAFO, TEXTOA, TEXTOB;
+non terminal ComponentHTML IMAGEN, IMG_ATR;
+non terminal ComponentHTML BOTON, BTN_ATR;
+non terminal ComponentHTML TABLA,  ROW,  COL, COL_SUBBODY;
+non terminal Queue<ComponentHTML> BODY_TABLA, ROW_BODY, COL_BODY;
+//VAR
+non terminal boolean BOOLEANO;
+//HSCRIPT
+non terminal HSCRIPT, HSINICIO, HSBODY;
+non terminal HS_VAR, OPER, HS_CADENA, HS_BOOLEANO, HS_STRUCT;
+non terminal FUNCSTRUCT, SET_STRUCT, GET_STRUCT, INSERT_STRUCT;
+non terminal PAR_BODY, IMG_BODY, TBL_BODY, TBL_SUBBODY;
+non terminal BOTON_STRUCT;
+non terminal BODY_IF, IFBOOL, IF_BODY, IF_ELSE;
+non terminal boolean IFCOND;
+non terminal HS_REPETIR;
+
+star with INICIO;
+
+INICIO:: = COMPI_INICIO CABECERA:a CUERPO:b COMPI_FINAL 
+{:
+    html_file = new Html(a,b);
+:};
+
+CABECERA::= CABEZA_INICIO TITULO:a CABEZA_FINAL
+{:
+    RESULT = new Head(a);
+:};
+
+TTIULO::= TITULO_INICIO PLAINTEXT:a TITULO_FINAL 
+{:
+    RESULT = new Title(a);
+:};
+
+CUERPO::= CUERPO_INICIO MAYOR_QUE BODY:a CUERPO_FINAL 
+{:
+    RESULT = new Body(a);
+:} 
+|  CUERPO_INICIO FONDO IGUAL CADENA:a MAYOR_QUE BODY:b CUERPO_FINAL 
+{:
+    RESULT = new Body(a,cuerpoHTML);
+:};
+
+BODY::= BODY:a SUBBODY:b
+{:
+    a.add(b);
+    RESULT = a;
+:}
+| SUBBODY:a
+{:
+    Queue<ComponentHTML> queueComp = new Queue();
+    queueComp.add(a);
+    RESULT = queueComp;
+:} ;
+
+SUBBODY::= PARRAFO:a 
+{:
+    RESULT = a;
+:}
+| SALTO :a
+{:
+    RESULT = a;
+:}
+| TABLA :a
+{:
+    RESULT = a;
+:}
+| IMAGEN :a
+{:
+    RESULT = a;
+:}
+| TEXTOA :a
+{:
+    RESULT = a;
+:}
+| TEXTOB :a
+{:
+    RESULT = a;
+:}
+| BOTON :a
+{:
+    RESULT = a;
+:}
+| ESPACIO :a
+{:
+    RESULT = a;
+:}
+| PLAINTEXT:a 
+{:
+    RESULT = new PlainText(a.toString());
+:}
+| HSCRIPT :a
+{:
+    RESULT = a;
+:};
+
+ESPACIO::= ESPACIO_INICIO BODY:a ESPACIO_FINAL 
+{:
+    RESULT =  new Room(a);
+:} 
+| ESPACIO_INICIO ESPACIO_FINAL;
+
+PARRAFO::= PARRAFO_INICIO MAYOR_QUE PLAINTEXT:a PARRAFO_FINAL 
+{:
+    RESULT = new Paragraph(a.toString());
+:}
+| PARRAFO_INICIO ALINEACION IGUAL CADENA:a MAYOR_QUE PLAINTEXT:b PARRAFO_FINAL
+{:  
+    Align alineado = null;
+    switch(a.toString().toLowerCase()){
+        case "justificado":
+            alineado = Align.JUSTIFY;
+            break;
+        case "derecha":
+            alineado = Align.DER;
+            break;
+        case "izquierda":
+            alineado = Align.IZQ;
+            break;
+        case "centrado":
+            alineado = Align.CENTER;
+            break;
+        default:
+            alineado = Align.IZQ;
+            break;
+    }
+    RESULT = new Paragraph(b.toString(), alineado);
+:};
+
+TEXTOA::= TEXTOA_INICIO PLAINTEXT:a TEXTOA_FINAL
+{:
+    RESULT = new TextA(a.toString());
+:};
+
+TEXTOB::=TEXTOB_INICIO PLAINTEXT:a TEXTOB_FINAL 
+{:
+    RESULT = new TextB(a.toString());
+:};
+
+IMAGEN::= IMAGEN_INICIO IMG_ATR:a MAYOR_QUE IMAGEN_FINAL
+{:
+    RESULT = a;
+:};
+
+IMG_ATR::= PATH IGUAL CADENA:a ALTO IGUAL ENTERO:b ANCHO IGUAL ENTERO:c
+{:
+    RESULT = new Image(a.toString(), new Integer(b), new Integer(c)) ;
+:}
+| PATH IGUAL CADENA:a ANCHO IGUAL ENTERO:b ALTO IGUAL ENTERO:c
+{:
+    RESULT = new Image(a.toString(), new Integer(c), new Integer(b)) ;
+:}
+| ALTO IGUAL ENTERO:a PATH IGUAL CADENA:b ANCHO IGUAL ENTERO:c
+{:
+    RESULT = new Image(b.toString(), new Integer(a), new Integer(c)) ;
+:}
+|ANCHO IGUAL ENTERO:a PATH IGUAL CADENA:b ALTO IGUAL ENTERO:c
+{:
+    RESULT = new Image(b.toString(), new Integer(c), new Integer(a)) ;
+:}
+|ALTO IGUAL ENTERO:a ANCHO IGUAL ENTERO:b PATH IGUAL CADENA:c
+{:
+    RESULT = new Image(c.toString(), new Integer(a), new Integer(b)) ;
+:}
+|ANCHO IGUAL ENTERO:a ALTO IGUAL ENTERO:b PATH IGUAL CADENA:c
+{:
+    RESULT = new Image(c.toString(), new Integer(b), new Integer(a)) ;
+:}
+|PATH IGUAL CADENA:a
+{:
+    RESULT = new Image(a.toString());
+:}
+|PATH IGUAL CADENA:a ALTO IGUAL ENTERO:b
+{:
+    RESULT = new Image(a.toString(), new Integer(b), Dimension.ALTO);
+:}
+|ALTO IGUAL ENTERO:a PATH IGUAL CADENA:b
+{:
+    RESULT = new Image(b.toString(), new Integer(a), Dimension.ALTO);
+:}
+|PATH IGUAL CADENA:a ANCHO IGUAL ENTERO:b
+{:
+    RESULT = new Image(a.toString(), new Integer(b), Dimension.ANCHO);
+:}
+|ANCHO IGUAL ENTERO:a PATH IGUAL CADENA:b
+{:
+    RESULT = new Image(b.toString(), new Integer(a), Dimension.ANCHO);
+:};
+
+BOTON::= BOTON_INICIO BTN_ATR:a MAYOR_QUE BOTON_FINAL
+{:
+    RESULT = a;
+:};
+
+BTN_ATR::= ID IGUAL CADENA:a TEXTO IGUAL CADENA:b 
+{:
+    RESULT = new Button(b.toString(), a.toString());
+:}
+| TEXTO IGUAL CADENA:b ID IGUAL CADENA:a 
+{:
+    RESULT = new Button(b.toString(), a.toString());
+:};
+
+TABLA::= TABLA_INICIO MAYOR_QUE BODY_TABLA:a TABLA_FINAL 
+{:
+    RESULT = new Table(a,false);
+:}
+| TABLA_INICIO BORDE IGUAL BOOLEANO:a MAYOR_QUE BODY_TABLA:b TABLA_FINAL 
+{:
+    RESULT = new Table(b,a);
+:};
+
+BODY_TABLA::= BODY_TABLA:b FILA_INICIO ROW_BODY:a FILA_FINAL 
+{:
+    b.add(new Row(a));
+    RESULT = b;
+:}
+| FILA_INICIO ROW_BODY:a FILA_FINAL
+{:
+    Queue<ComponentHTML> rowContenido = new Queue();
+    rowContenido.add(new Row(a));
+    RESULT = rowContenido;
+:};
+
+ROW_BODY::= ROW_BODY:b COLUMNAC_INICIO COL_BODY:a COLUMNAC_FINAL
+{:
+    b.add(new Column(a,true));
+    RESULT = b;
+:}
+| ROW_BODY:b COLUMNA_INICIO COL_BODY:a COLUMNA_FINAL
+{:
+    b.add(new Column(a,false));
+    RESULT = b;
+:}
+| COLUMNAC_INICIO COL_BODY:a COLUMNAC_FINAL
+{:
+    Queue<ComponentHTML> colContenido = new Queue();
+    colContenido.add(new Column(a,true));
+    RESULT = colContenido;
+:}
+| COLUMNA_INICIO COL_BODY:a COLUMNA_FINAL 
+{:
+    Queue<ComponentHTML> colContenido = new Queue();
+    colContenido.add(new Column(a,false));
+    RESULT = colContenido;
+:};
+
+COL_BODY::= COL_BODY:a COL_SUBBODY:b
+{:
+    a.add(b);
+    RESULT = a;
+:}
+| COL_SUBBODY:a
+{:
+    Queue<ComponentHTML> contenido = new Queue();
+    contenido.add(a);
+    RESULT = contenido;
+:};
+
+COL_SUBBODY::=  SALTO:a 
+{:
+    RESULT = a;
+:}
+| PARRAFO:a
+{:
+    RESULT = a;
+:}
+| IMAGEN:a
+{:
+    RESULT = a;
+:}
+| BOTON:a
+{:
+    RESULT = a;
+:}
+|HSCRIPT:a
+{:
+    RESULT = a;
+:}
+| PLAINTEXT:a
+{:
+    RESULT = new PlainText(a.toString());
+:};
+
+BOOLEANO::= VERDADERO
+{:
+    RESULT = true;
+:} 
+| FALSO
+{:
+    RESULT = false;
+:};
 
