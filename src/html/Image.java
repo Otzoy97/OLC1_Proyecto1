@@ -36,7 +36,7 @@ public class Image implements ComponentHTML {
             case ANCHO:
                 ancho = medida;
                 break;
-        }
+        } 
     }
     /**
      * Se especifican las dos medidas

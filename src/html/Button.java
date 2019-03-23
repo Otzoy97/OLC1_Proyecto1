@@ -39,9 +39,6 @@ public class Button implements ComponentHTML {
     public String getTexto(){
         return this.texto;
     }
-    public String getId(){
-        return this.identificador;
-    }
     public void setAlerta(String alerta){
         this.alerta = alerta;
     }
