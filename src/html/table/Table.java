@@ -6,14 +6,17 @@
 package html.table;
 
 import html.ComponentHTML;
+import java.util.Queue;
+
 /**
  *
  * @author otzoy
  */
 public class Table implements ComponentHTML {
-    private Row filas;
+    private Queue<Row> filas;
     private boolean borde;
-    public Table(Row filas, boolean borde) {
+    
+    public Table(Queue<Row> filas, boolean borde) {
         this.filas = filas;
         this.borde = borde;
     }
@@ -29,7 +32,9 @@ public class Table implements ComponentHTML {
             sb.append(" style=\"border: 1px solid\"");
         }
         sb.append(">\n");
-        sb.append(filas.getHtml());
+        while(!filas.isEmpty()){
+            sb.append(filas.poll().getHtml());
+        }
         sb.append("</table>\n");
         return sb.toString();
     }
