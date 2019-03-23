@@ -5,7 +5,6 @@
  */
 package analyzer.var;
 
-import analyzer.var.Var;
 
 /**
  * 
