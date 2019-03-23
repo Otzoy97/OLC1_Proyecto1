@@ -6,16 +6,16 @@
 package html.table;
 
 import html.ComponentHTML;
-import java.util.Stack;
+import java.util.Queue;
 /**
  *
  * @author otzoy
  */
 public class Column implements ComponentHTML {
-    private Stack<ComponentHTML> contenido;
+    private Queue<ComponentHTML> contenido;
     private boolean esEncabezado;
     
-    public Column(Stack<ComponentHTML> contenido, boolean esEncabezado ) {
+    public Column(Queue<ComponentHTML> contenido, boolean esEncabezado ) {
         this.contenido = contenido;
         this.esEncabezado = esEncabezado;
     }
@@ -29,7 +29,7 @@ public class Column implements ComponentHTML {
         StringBuilder sb = new StringBuilder();
         sb.append(esEncabezado ? "<th>" : "<td>" );
         while(!contenido.isEmpty()){
-            sb.append(contenido.pop().getHtml());
+            sb.append(contenido.poll().getHtml());
         }
         sb.append(esEncabezado ? "</th>" : "</td>" ).append("\n");
         return sb.toString();

@@ -4,16 +4,16 @@
  * and open the template in the editor.
  */
 package html.table;
-import java.util.Stack;
+import java.util.Queue;
 import html.ComponentHTML;
 /**
  *
  * @author otzoy
  */
 public class Row implements ComponentHTML {
-    private Stack<Column> columnas;
+    private Queue<Column> columnas;
 
-    public Row(Stack<Column> columnas) {
+    public Row(Queue<Column> columnas) {
         this.columnas = columnas;
     }
     /**
@@ -25,7 +25,7 @@ public class Row implements ComponentHTML {
         StringBuilder sb = new StringBuilder();
         sb.append("<tr>\n");
         while(!columnas.isEmpty()){
-            sb.append(columnas.pop().getHtml());
+            sb.append(columnas.poll().getHtml());
         }
         sb.append("</tr>\n");
         return sb.toString();

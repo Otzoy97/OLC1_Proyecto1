@@ -4,19 +4,22 @@
  * and open the template in the editor.
  */
 package html;
-import java.awt.Color;
-import java.util.Stack;
+import java.util.Queue;
 /**
  *
  * @author otzoy
  */
 public class Body implements ComponentHTML {
-    private Stack<ComponentHTML> cuerpoHTML;
+    private Queue<ComponentHTML> cuerpoHTML;
     private String color;
     
-    public Body(String color, Stack<ComponentHTML> cuerpo){
+    public Body(String color, Queue<ComponentHTML> cuerpo){
         this.cuerpoHTML = cuerpo;
         this.color = color;
+    }
+    
+    public Body(Queue<ComponentHTML> cuerpo){
+        this.cuerpoHTML = cuerpo;
     }
     /**
      * Devuelve el body en formato html
@@ -31,7 +34,7 @@ public class Body implements ComponentHTML {
         }
         sb.append(">\n");
         while(!cuerpoHTML.isEmpty()){
-            sb.append(cuerpoHTML.pop().getHtml());
+            sb.append(cuerpoHTML.poll().getHtml());
         }
         sb.append("</body>");
         return sb.toString();

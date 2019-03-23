@@ -4,15 +4,15 @@
  * and open the template in the editor.
  */
 package html;
-import java.util.Stack;
+import java.util.Queue;
 /**
  *
  * @author otzoy
  */
 public class Room implements ComponentHTML {
-    private Stack<ComponentHTML> pilaHTML;
+    private Queue<ComponentHTML> pilaHTML;
     
-    public Room(Stack<ComponentHTML> pilaHTML){
+    public Room(Queue<ComponentHTML> pilaHTML){
         this.pilaHTML = pilaHTML;
     }
     /**
@@ -24,7 +24,7 @@ public class Room implements ComponentHTML {
         StringBuilder sb = new StringBuilder();
         sb.append("<div>\n");
         while(!pilaHTML.isEmpty()){
-            sb.append(pilaHTML.pop().getHtml());
+            sb.append(pilaHTML.poll().getHtml());
         }
         sb.append("</div>\n");
         return sb.toString();
