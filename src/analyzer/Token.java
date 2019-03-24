@@ -28,11 +28,11 @@ public class Token {
     public String getToken(int contador){
         StringBuilder br = new StringBuilder();
         br.append("<tr>");
-        br.append("<th>").append(contador).append("</th>");
-        br.append("<th>").append(this.fila).append("</th>");
-        br.append("<th>").append(this.columna).append("</th>");
-        br.append("<th>").append(this.lexema).append("</th>");
-        br.append("<th>").append(this.token).append("</th>");
+        br.append("<td class=\"tg-baqh\" >").append(contador).append("</td>");
+        br.append("<td class=\"tg-baqh\" >").append(this.fila).append("</td>");
+        br.append("<td class=\"tg-baqh\" >").append(this.columna).append("</td>");
+        br.append("<td class=\"tg-baqh\" ").append(this.lexema).append("</td>");
+        br.append("<td class=\"tg-baqh\" >").append(this.token).append("</td>");
         br.append("</tr>");        
         return br.toString();
     }
