@@ -13,6 +13,22 @@ public class Paragraph implements ComponentHTML {
     
     private Align alineado = null;
     private String parrafo = "";
+
+    public Align getAlineado() {
+        return alineado;
+    }
+
+    public void setAlineado(Align alineado) {
+        this.alineado = alineado;
+    }
+
+    public String getParrafo() {
+        return parrafo;
+    }
+
+    public void setParrafo(String parrafo) {
+        this.parrafo = parrafo;
+    }
     
     public enum Align{
         IZQ,DER,CENTER,JUSTIFY;

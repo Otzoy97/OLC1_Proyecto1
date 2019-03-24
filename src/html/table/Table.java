@@ -13,10 +13,10 @@ import java.util.Queue;
  * @author otzoy
  */
 public class Table implements ComponentHTML {
-    private Queue<Row> filas;
+    private Queue<ComponentHTML> filas;
     private boolean borde;
     
-    public Table(Queue<Row> filas, boolean borde) {
+    public Table(Queue<ComponentHTML> filas, boolean borde) {
         this.filas = filas;
         this.borde = borde;
     }
@@ -37,6 +37,14 @@ public class Table implements ComponentHTML {
         }
         sb.append("</table>\n");
         return sb.toString();
+    }
+
+    public boolean isBorde() {
+        return borde;
+    }
+
+    public void setBorde(boolean borde) {
+        this.borde = borde;
     }
     
 }

@@ -25,5 +25,14 @@ public class TextA implements ComponentHTML{
         sb.append("<h1>\n").append(texto).append("\n</h1>\n");
         return sb.toString();
     }
+
+    public String getTexto() {
+        return texto;
+    }
+
+    public void setTexto(String texto) {
+        this.texto = texto;
+    }
+    
     
 }
