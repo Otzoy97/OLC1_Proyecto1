@@ -25,4 +25,12 @@ public class TextB implements ComponentHTML {
         sb.append("<h3>\n").append(texto).append("\n</h3>\n");
         return sb.toString();
     }
+
+    public String getTexto() {
+        return texto;
+    }
+
+    public void setTexto(String texto) {
+        this.texto = texto;
+    }
 }
