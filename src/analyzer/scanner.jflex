@@ -265,7 +265,7 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
 <HTML> {
     {ComentarioHTML} {}
     {Espacio} {
-        String temp = cadena.substring(cadena.length-1);
+        String temp = cadena.substring(cadena.length() - 1, cadena.length());
         if(!temp.equals(" ") && !temp.equals("\n") && !temp.equals("\t") && !temp.equals("\f") && !temp.equals("\r")){
             cadena += " ";
         }
@@ -275,7 +275,7 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
             yypushback(1);
             yybegin(YYINITIAL);
             LexTok.add(new Token("TEXTO PLANO",yycolumn,yyline,cadena));        
-            return new Sym(sym.PLAINTEXT,yycolumn,yyline,cadena);
+            return new Symbol(sym.PLAINTEXT,yycolumn,yyline,cadena);
         } else {
             cadena += yytext();
         }
@@ -491,10 +491,6 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
         LexTok.add(new Token("GETTEXTO",yycolumn,yyline,yytext()));
         return new Symbol(sym.GETTEXTO, yycolumn, yyline, yytext());
     }
-    "setid" {
-        LexTok.add(new Token("SETID",yycolumn,yyline,yytext()));
-        return new Symbol(sym.SETID, yycolumn, yyline, yytext());
-    }
     "clickboton" {
         LexTok.add(new Token("CLICKBOTON",yycolumn,yyline,yytext()));
         return new Symbol(sym.CLICKBOTON, yycolumn, yyline, yytext());
@@ -649,11 +645,11 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
     } 
     "true" {
         LexTok.add(new Token("VERDADERO",yycolumn,yyline,yytext()));
-        return new Symbol(sym.BOOLEANO,yycolumn,yyline,yytext());
+        return new Symbol(sym.VERDADERO,yycolumn,yyline,yytext());
     }
     "false" {
         LexTok.add(new Token("FALSO",yycolumn,yyline,yytext()));
-        return new Symbol(sym.BOOLEANO,yycolumn,yyline,yytext());
+        return new Symbol(sym.FALSO,yycolumn,yyline,yytext());
     }
 }
 [^] {

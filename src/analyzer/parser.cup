@@ -1,10 +1,14 @@
 package analyzer;
 
 import java_cup.runtime.Symbol;
-import OLC1_PROYECTO1.html.*;
+import html.*;
+import html.hscript.*;
+import html.table.*;
+import html.Paragraph.Align;
+import html.Image.Dimension;
 import java.util.Queue;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedList;
 
 parser code{:
     //public boolean flag = true;
@@ -17,13 +21,33 @@ parser code{:
      * Servirá como tabla de símbolos pero para los struct
      */
     public ArrayList<Estructura> listaEstrucutra = new ArrayList();
-
+    /**
+     * Cola de errores
+     */
+    public ArrayList<String> errores = new ArrayList();
     /*Errores*/
     public void syntax_error (Symbol s){
-        Scanner.Err += "Leve. Línea: " + s.right + ", Columna: " + s.left + ". Identificador: " + s.value + "\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append("<tr>");
+        sb.append("<td>").append("Leve").append("</td>");
+        sb.append("<td>").append(s.right+"").append("</td>");
+        sb.append("<td>").append(s.left+"").append("</td>");
+        sb.append("<td>").append(s.value+"").append("</td>");
+        sb.append("<td>").append(s.sym+"").append("</td>");
+        sb.append("</tr>");
+        errores.add(sb.toString());
     }
+
     public void unrecovered_syntax_error(Symbol s){ 
-        Scanner.Err += "Grave. Línea: " + s.right + ", Columna: " + s.left + ". Identificador: " + s.value +"\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append("<tr>");
+        sb.append("<td>").append("Grave").append("</td>");
+        sb.append("<td>").append(s.right+"").append("</td>");
+        sb.append("<td>").append(s.left+"").append("</td>");
+        sb.append("<td>").append(s.value+"").append("</td>");
+        sb.append("<td>").append(s.sym+"").append("</td>");
+        sb.append("</tr>");
+        errores.add(sb.toString());
     }
 :}
 
@@ -46,7 +70,7 @@ terminal ESPACIO_INICIO, ESPACIO_FINAL;
 terminal PARRAFO_INICIO, ALINEACION, PARRAFO_FINAL;
 terminal SALTO;
 terminal TEXTOA_INICIO, TEXTOA_FINAL, TEXTOB_INICIO, TEXTOB_FINAL;
-terminal IMAGEN_INICIO, PATH, ALTO, ANCHO. IMAGEN_FINAL;
+terminal IMAGEN_INICIO, PATH, ALTO, ANCHO, IMAGEN_FINAL;
 terminal BOTON_INICIO, ID, TEXTO,  BOTON_FINAL;
 terminal TABLA_INICIO, BORDE, TABLA_FINAL;
 terminal FILA_INICIO, FILA_FINAL;
@@ -60,20 +84,19 @@ terminal CREARIMAGEN, GETPATH, GETANCHO, GETALTO, SETPATH, SETANCHO, SETALTO;
 terminal CREARPARRAFO, SETCONTENIDO, GETCONTENIDO, SETALINEACION, GETALINEACION;
 terminal CREARTEXTOA, CREARTEXTOB;
 terminal CREARTABLA, SETBORDE, GETBORDE;
-terminal CREARBOTON, SETTEXTO, GETTEXTO, SETID, CLICKBOTON;
-terminal String ESTRUCTURA, 
+terminal CREARBOTON, SETTEXTO, GETTEXTO, CLICKBOTON;
+terminal String ESTRUCTURA;
 terminal INSERTAR;
 terminal String IDENTIFICADOR;
 //GENERAL
 terminal String CADENA;
 terminal int ENTERO;
 terminal Double DECIMAL;
-terminal VERDADERO, FALSO;
+terminal boolean VERDADERO, FALSO;
 /**-----NO TERMINALES-----**/
 non terminal INICIO;
 //HTML
 non terminal Head CABECERA ;
-non terminal ComponentHTML TITULO;
 non terminal Body CUERPO;
 non terminal Queue<ComponentHTML> BODY;
 non terminal ComponentHTML SUBBODY;
@@ -81,7 +104,7 @@ non terminal ComponentHTML SUBBODY;
 non terminal ComponentHTML ESPACIO, PARRAFO, TEXTOA, TEXTOB;
 non terminal ComponentHTML IMAGEN, IMG_ATR;
 non terminal ComponentHTML BOTON, BTN_ATR;
-non terminal ComponentHTML TABLA,  ROW,  COL, COL_SUBBODY;
+non terminal ComponentHTML TABLA, COL_SUBBODY;
 non terminal Queue<ComponentHTML> BODY_TABLA, ROW_BODY, COL_BODY;
 //VAR
 non terminal boolean BOOLEANO;
@@ -92,40 +115,38 @@ non terminal Variable HS_VAR;
 non terminal Estructura  HS_STRUCT;
 non terminal ComponentHTML FUNCSTRUCT;
 non terminal OPER;
-non terminal ECHO_BODY;
+non terminal String HS_ECHO, ECHO_BODY;
 non terminal SET_STRUCT, GET_STRUCT;
 non terminal Queue<ComponentHTML> TBL_SUBBODY,TBL_BODY;
 non terminal String INSERT_STRUCT;
 non terminal Paragraph PAR_BODY;
 non terminal Image IMG_BODY; 
 non terminal BOTON_STRUCT;
-non terminal String HS_IF, BODY_IF, IF_BODY, IF_SUBBODY, IF_ELSE;
-non terminal String HS_REPETIR, HS_REPETIR_INSERT;
+non terminal String HS_IF, IF_BODY, IF_SUBBODY;
+non terminal String HS_REPETIR;
 
 /*precedencia*/
 precedence left OR;
 precedence left AND;
 precedence right NOT;
 precedence left IGUAL_IGUAL, DIFERENTE, MENOR_QUE, MENOR_QUE_IGUAL, MAYOR_QUE, MAYOR_QUE_IGUAL;
-precedence left SUMA, MENOS;
+precedence left MAS, MENOS;
 precedence left DIVISION, PRODUCTO;
 
-star with INICIO;
+start with INICIO;
 
-INICIO:: = COMPI_INICIO CABECERA:a CUERPO:b COMPI_FINAL {: html_file = new Html(a,b); :};
+INICIO::= COMPI_INICIO CABECERA:a CUERPO:b COMPI_FINAL {: html_file = new Html(a,b); :};
 
-CABECERA::= CABEZA_INICIO TITULO:a CABEZA_FINAL {: RESULT = new Head(a); :};
-
-TTIULO::= TITULO_INICIO PLAINTEXT:a TITULO_FINAL {: RESULT = new Title(a); :};
+CABECERA::= CABEZA_INICIO TITULO_INICIO PLAINTEXT:a TITULO_FINAL  CABEZA_FINAL {: RESULT = new Head(new Title(a.toString())); :};
 
 CUERPO::= CUERPO_INICIO MAYOR_QUE BODY:a CUERPO_FINAL {: RESULT = new Body(a); :} 
-| CUERPO_INICIO FONDO IGUAL CADENA:a MAYOR_QUE BODY:b CUERPO_FINAL {: RESULT = new Body(a,cuerpoHTML); :};
+| CUERPO_INICIO FONDO IGUAL CADENA:a MAYOR_QUE BODY:b CUERPO_FINAL {: RESULT = new Body(a,b); :};
 
 BODY::= BODY:a SUBBODY:b {: a.add(b);  RESULT = a; :}
-| SUBBODY:a {: Queue<ComponentHTML> queueComp = new Queue(); queueComp.add(a); RESULT = queueComp; :} ;
+| SUBBODY:a {: Queue<ComponentHTML> queueComp = new LinkedList<ComponentHTML>(); queueComp.add(a); RESULT = queueComp; :} ;
 
 SUBBODY::= PARRAFO:a {: RESULT = a; :}
-| SALTO :a {: RESULT = a; :}
+| SALTO :a {: RESULT = new BreakLine(); :}
 | TABLA :a {: RESULT = a; :}
 | IMAGEN :a {: RESULT = a; :}
 | TEXTOA :a {: RESULT = a; :}
@@ -192,7 +213,7 @@ TABLA::= TABLA_INICIO MAYOR_QUE BODY_TABLA:a TABLA_FINAL {: RESULT = new Table(a
 BODY_TABLA::= BODY_TABLA:b FILA_INICIO ROW_BODY:a FILA_FINAL {: b.add(new Row(a)); RESULT = b; :}
 | FILA_INICIO ROW_BODY:a FILA_FINAL
 {:
-    Queue<ComponentHTML> rowContenido = new Queue();
+    Queue<ComponentHTML> rowContenido = new LinkedList<ComponentHTML>();
     rowContenido.add(new Row(a));
     RESULT = rowContenido;
 :};
@@ -201,13 +222,13 @@ ROW_BODY::= ROW_BODY:b COLUMNAC_INICIO COL_BODY:a COLUMNAC_FINAL {: b.add(new Co
 | ROW_BODY:b COLUMNA_INICIO COL_BODY:a COLUMNA_FINAL {: b.add(new Column(a,false)); RESULT = b; :}
 | COLUMNAC_INICIO COL_BODY:a COLUMNAC_FINAL
 {:
-    Queue<ComponentHTML> colContenido = new Queue();
+    Queue<ComponentHTML> colContenido = new LinkedList<ComponentHTML>();
     colContenido.add(new Column(a,true));
     RESULT = colContenido;
 :}
 | COLUMNA_INICIO COL_BODY:a COLUMNA_FINAL 
 {:
-    Queue<ComponentHTML> colContenido = new Queue();
+    Queue<ComponentHTML> colContenido = new LinkedList<ComponentHTML>();
     colContenido.add(new Column(a,false));
     RESULT = colContenido;
 :};
@@ -215,16 +236,16 @@ ROW_BODY::= ROW_BODY:b COLUMNAC_INICIO COL_BODY:a COLUMNAC_FINAL {: b.add(new Co
 COL_BODY::= COL_BODY:a COL_SUBBODY:b {: a.add(b); RESULT = a; :}
 | COL_SUBBODY:a
 {:
-    Queue<ComponentHTML> contenido = new Queue();
+    Queue<ComponentHTML> contenido = new LinkedList<ComponentHTML>();
     contenido.add(a);
     RESULT = contenido;
 :};
 
-COL_SUBBODY::=  SALTO:a  {: RESULT = a; :}
-| PARRAFO:a {: RESULT = a; :}
-| IMAGEN:a {: RESULT = a; :}
-| BOTON:a {: RESULT = a; :}
-|HSCRIPT:a {: RESULT = a; :}
+COL_SUBBODY::=  SALTO:a  {: RESULT = new BreakLine(); :}
+| PARRAFO:a {: RESULT = (ComponentHTML) a; :}
+| IMAGEN:a {: RESULT = (ComponentHTML) a; :}
+| BOTON:a {: RESULT = (ComponentHTML) a; :}
+|HSCRIPT:a {: RESULT = (ComponentHTML) a; :}
 | PLAINTEXT:a {:RESULT = new PlainText(a.toString()); :};
 
 BOOLEANO::= VERDADERO {: RESULT = true; :} 
@@ -233,9 +254,9 @@ BOOLEANO::= VERDADERO {: RESULT = true; :}
 ///-------------------------------------
 
 HSCRIPT::= HSCRIPT_INICIO HS_INICIO:a HSCRIPT_FINAL 
-{: RESULT = new PlainText(a.toString()) :};
+{: RESULT = new PlainText(a.toString()); :};
 
-HS_INCIO::= HS_INICIO:a HS_BODY:b {: RESULT = a + b ;:}
+HS_INICIO::= HS_INICIO:a HS_BODY:b {: RESULT = a + b ;:}
 | HS_BODY:a {: RESULT = a; :};
 
 HS_BODY::= HS_VAR:a SEMICOLON
@@ -251,17 +272,18 @@ HS_BODY::= HS_VAR:a SEMICOLON
 | HS_ECHO:a SEMICOLON
 {:
     //Utilizar el nombre del atributo de la consola y utilizar setText(getText()+a)
+    //Descolar toda la lista
     RESULT="";
 :}
 | HS_IF:a 
 {:
     //Viene una cadena vacía o llena de algo :v
-    RESULT="";
+    RESULT=a.toString();
 :}
 | HS_REPETIR:a
 {:
     //Viene una cadena vacía o llena de algo :v
-    RESULT="";
+    RESULT=a.toString();
 :}
 | SET_STRUCT {: RESULT="";:}
 | GET_STRUCT {:RESULT="";:}
@@ -274,7 +296,7 @@ HS_BODY::= HS_VAR:a SEMICOLON
 HS_VAR::= IDENTIFICADOR:a IGUAL OPER:b
 {:
     //Retorna una nueva variable;
-    RESULT = new Variable(b,a.toString().substring(1),s.left,s.right);
+    RESULT = new Variable(b,a.toString().substring(1), ((java_cup.runtime.Symbol)a).left ,((java_cup.runtime.Symbol)a).right);
 :};
 
 HS_STRUCT ::= ESTRUCTURA:a IGUAL FUNCSTRUCT:b
@@ -297,7 +319,7 @@ OPER ::= OPER:a MAS OPER:b {: RESULT = ( Double.parseDouble(a.toString()) + Doub
 | OPER:a IGUAL_IGUAL OPER:b {: RESULT = (a==b); :}
 | OPER:a DIFERENTE OPER:b {: RESULT = (a!=b); :}
 | NOT OPER:a {: RESULT = !Boolean.parseBoolean(a.toString()); :}
-| ENTERO:a {: RESULT = Integer.parseInt(a.toString()); :}
+| ENTERO:a {: RESULT = a; :}
 | DECIMAL:a {: RESULT = Double.parseDouble(a.toString()); :}
 | IDENTIFICADOR:a {: 
     //Castea el identifcador
@@ -307,7 +329,7 @@ OPER ::= OPER:a MAS OPER:b {: RESULT = ( Double.parseDouble(a.toString()) + Doub
     //Procede a buscarlos en la lista de variables
     for (Variable var : listaVariable){
         if (var.getIdentificador().equals(temp)){
-            res = var.getObject();
+            res = var.getObjeto();
         }
     }
     RESULT = res;
@@ -322,19 +344,19 @@ FUNCSTRUCT::= CREARPARRAFO PARIZQ PAR_BODY:a PARDER {:
     RESULT = a;
 :}
 | CREARTEXTOA PARIZQ OPER:a PARDER {:
-    RESULT = new TextA(a);
+    RESULT = new TextA(a.toString());
 :}
 | CREARTEXTOB PARIZQ OPER:a PARDER {:
-    RESULT = new TextB(a);
+    RESULT = new TextB(a.toString());
 :}
 | CREARIMAGEN PARIZQ IMG_BODY:a PARDER {:
     RESULT = a;
 :}
 | CREARTABLA PARIZQ TBL_BODY:a PARDER {:
-    RESULT = new Table(a);
+    RESULT = new Table(a,false);
 :}
 | CREARBOTON PARIZQ OPER:a COMMA OPER:b PARDER {:
-    RESULT = Button(b,a);
+    RESULT = new Button(b.toString(),a.toString());
 :};
 
 SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
@@ -347,16 +369,16 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
             switch(b.toString())
             {
                 case "izquierda":
-                    ((Paragraph)var.getComponentHTML).setAlineado(Align.IZQ);
+                    ((Paragraph)var.getComponente()).setAlineado(Align.IZQ);
                     break;
                 case "derecho":
-                    ((Paragraph)var.getComponentHTML).setAlineado(Align.DER);
+                    ((Paragraph)var.getComponente()).setAlineado(Align.DER);
                     break;
                 case "centrado":
-                    ((Paragraph)var.getComponentHTML).setAlineado(Align.CENTER);
+                    ((Paragraph)var.getComponente()).setAlineado(Align.CENTER);
                     break;
                 case  "justificado":
-                    ((Paragraph)var.getComponentHTML).setAlineado(Align.JUSTIFY);
+                    ((Paragraph)var.getComponente()).setAlineado(Align.JUSTIFY);
                     break;
             }
         }
@@ -372,13 +394,13 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
             switch(var.getStruct())
             {
                 case PARRAFO_:
-                     ((Paragraph)var.getComponentHTML).setParrafo(b.toString());
+                     ((Paragraph)var.getComponente()).setParrafo(b.toString());
                     break;
                 case TEXTOA_:
-                    ((TextA)var.getComponentHTML).setTexto(b.toString());
+                    ((TextA)var.getComponente()).setTexto(b.toString());
                     break;
                 case TEXTOB_:
-                    ((TextB)var.getComponentHTML).setTexto(b.toString());
+                    ((TextB)var.getComponente()).setTexto(b.toString());
                     break;
             }
         }
@@ -391,7 +413,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            ((Image)var.getComponentHTML).setPath(b.toString());
+            ((Image)var.getComponente()).setPath(b.toString());
         }
     }
 :}
@@ -402,7 +424,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            ((Image)var.getComponentHTML).setAlto( (int) Double.parseDouble(b.toString());
+            ((Image)var.getComponente()).setAlto( (int) Double.parseDouble(b.toString()));
         }
     }
 :}
@@ -413,7 +435,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            ((Image)var.getComponentHTML).setPath( (int) Double.parseDouble(b.toString()));
+            ((Image)var.getComponente()).setAncho( (int) Double.parseDouble(b.toString()));
         }
     }
 :}
@@ -424,7 +446,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            ((Button)var.getComponentHTML).setTexto(b.toString());
+            ((Button)var.getComponente()).setTexto(b.toString());
         }
     }
 :}
@@ -435,7 +457,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            ((Table)var.getComponentHTML).setBorde(Boolean.parseBoolean(b.toString()));
+            ((Table)var.getComponente()).setBorde(Boolean.parseBoolean(b.toString()));
         }
     }
 :};
@@ -449,7 +471,7 @@ GET_STRUCT::= ESTRUCTURA:a DOT GETALINEACION PARIZQ PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            switch(((Paragraph)var.getComponentHTML).getAlineacion())
+            switch(((Paragraph)var.getComponente()).getAlineado())
             {
                 case IZQ:
                     res = "izquierda";
@@ -480,13 +502,13 @@ GET_STRUCT::= ESTRUCTURA:a DOT GETALINEACION PARIZQ PARDER
             switch(var.getStruct())
             {
                 case PARRAFO_:
-                    res = ((Paragraph)var.getComponentHTML).getParrafo();
+                    res = ((Paragraph)var.getComponente()).getParrafo();
                     break;
                 case TEXTOA_:
-                    res = ((TextA)var.getComponentHTML).getTexto();
+                    res = ((TextA)var.getComponente()).getTexto();
                     break;
                 case TEXTOB_:
-                    res = ((TextB)var.getComponentHTML).getTexto();
+                    res = ((TextB)var.getComponente()).getTexto();
                     break;
             }
         }
@@ -502,7 +524,7 @@ GET_STRUCT::= ESTRUCTURA:a DOT GETALINEACION PARIZQ PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            res = ((Image)var.getComponentHTML).getPath();
+            res = ((Image)var.getComponente()).getPath();
         }
     }
     RESULT = res;
@@ -516,7 +538,7 @@ GET_STRUCT::= ESTRUCTURA:a DOT GETALINEACION PARIZQ PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            res = ((Image)var.getComponentHTML).getAlto();
+            res = ((Image)var.getComponente()).getAlto();
         }
     }
     RESULT = res;
@@ -530,7 +552,7 @@ GET_STRUCT::= ESTRUCTURA:a DOT GETALINEACION PARIZQ PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            res = ((Image)var.getComponentHTML).getAncho();
+            res = ((Image)var.getComponente()).getAncho();
         }
     }
     RESULT = res;
@@ -544,7 +566,7 @@ GET_STRUCT::= ESTRUCTURA:a DOT GETALINEACION PARIZQ PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            res = ((Table)var.getComponentHTML).isBorde();
+            res = ((Table)var.getComponente()).isBorde();
         }
     }
     RESULT = res;
@@ -557,32 +579,44 @@ GET_STRUCT::= ESTRUCTURA:a DOT GETALINEACION PARIZQ PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            res = ((Button)var.getComponentHTML).getTexto();
+            res = ((Button)var.getComponente()).getTexto();
         }
     }
     RESULT = res; 
 :};
 
-INSERT_STRUCT::= ESTRUCTURA:a DOT INSERTAR PARIZQ PARDER {::};
+INSERT_STRUCT::= ESTRUCTURA:a DOT INSERTAR PARIZQ PARDER {:
+    //Guardará el return :v
+    String res = "";
+    //Castea el identifcador
+    String temp = a.toString().substring(1);
+    //Procede a buscarlos en la lista de variables
+    for (Estructura var : listaEstrucutra){
+        if (var.getIdentificador().equals(temp)){
+            res = var.getComponente().getHtml();
+        }
+    }
+    RESULT = res;
+:};
 
 PAR_BODY::= OPER:a COMMA OPER:b {:
     Paragraph par = null;
     switch(b.toString())
     {
         case "izquierda":
-            par = new Paragraph(a, Align.IZQ);
+            par = new Paragraph(a.toString(), Align.IZQ);
             break;
         case "derecho":
-            par = new Paragraph(a,Align.DER);
+            par = new Paragraph(a.toString(),Align.DER);
             break;
         case "centrado":
-            par = new Paragraph(a, Align.CENTER);
+            par = new Paragraph(a.toString(), Align.CENTER);
             break;
         case  "justificado":
-            par = new Paragraph(a, Align.JUSTIFY);
+            par = new Paragraph(a.toString(), Align.JUSTIFY);
             break;
         default :
-            par = new Paragraph(a, Align.IZQ);
+            par = new Paragraph(a.toString(), Align.IZQ);
             break;
     }
     RESULT = par;
@@ -591,23 +625,22 @@ PAR_BODY::= OPER:a COMMA OPER:b {:
     RESULT = new Paragraph(a.toString());
 :};
 
-IMG_BODY::= OPER:a COMMA OPER:b COMMA OPER:c {: RESULT = new Image((int)Double.parseDouble(a.toString()),(int) Double.parseDouble(b.toString()), (int) Double.parseDouble(c.toString()));:}
-| OPER:a COMMA OPER:b {: RESULT = new Image((int)Double.parseDouble(a.toString()),(int) Double.parseDouble(b.toString()), Dimension.ALTO );:}
-| OPER:a {: RESULT = new Image((int)Double.parseDouble(a.toString())):};
+IMG_BODY::= OPER:a COMMA OPER:b COMMA OPER:c {: RESULT = new Image(a.toString(),(int) Double.parseDouble(b.toString()), (int) Double.parseDouble(c.toString()));:}
+| OPER:a COMMA OPER:b {: RESULT = new Image(a.toString(),(int) Double.parseDouble(b.toString()), Dimension.ALTO );:}
+| OPER:a {: RESULT = new Image(a.toString());:};
 
 TBL_BODY::= TBL_BODY:a COMMA CORIZQ TBL_SUBBODY:b CORDER
 {:
     a.add(new Column(b,false));
     RESULT = a;
 :}
-| CORIZQ TBL_SUBBODY:a CORDER {: 
-    //Queue<ComponentHTML> temp = (Queue<ComponentHTML>) a;  
-    Queue<ComponentHTML> filas = new Queue(); 
-    filas.add(new Column(temp,true)) ; 
+| CORIZQ TBL_SUBBODY:a CORDER {:  
+    Queue<ComponentHTML> filas = new LinkedList<ComponentHTML>(); 
+    filas.add(new Column(a,true)) ; 
     RESULT = filas; :};
 
 TBL_SUBBODY::= TBL_SUBBODY:a COMMA OPER:b {: a.add(new PlainText(b.toString()));  RESULT = a; :}
-| OPER:a {: Queue<ComponentHTML> cola = new Queue(); cola.add(new PlainText(a.toString())); RESULT = cola;:};
+| OPER:a {: Queue<ComponentHTML> cola = new LinkedList<ComponentHTML>(); cola.add(new PlainText(a.toString())); RESULT = cola;:};
 
 BOTON_STRUCT::= ESTRUCTURA:a DOT CLICKBOTON PARIZQ OPER:b PARDER 
 {:
@@ -616,36 +649,53 @@ BOTON_STRUCT::= ESTRUCTURA:a DOT CLICKBOTON PARIZQ OPER:b PARDER
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
-            ((Button)var.getComponentHTML).setAlerta(b.toString());
+            ((Button)var.getComponente()).setAlerta(b.toString());
         }
     }
 :};
 
 HS_ECHO::= ECHO ECHO_BODY:a {:
+    RESULT  = a;
+:};
+
+ECHO_BODY::= ECHO_BODY:b DOT OPER:a {: RESULT = b.toString()+a.toString(); :}
+| OPER:a {: RESULT = a.toString(); :};
+
+HS_IF::= IF PARIZQ  OPER:a PARDER LLVIZQ IF_BODY:b LLVDER {:
+    //Valor a devolver
+    String res = "";
+    if (Boolean.parseBoolean(a.toString())){
+        //Asigna la cadena que se ha estado corriendo;
+        res = b.toString();
+    } 
+    RESULT = res;
+:}
+| IF PARIZQ OPER:a PARDER LLVIZQ IF_BODY:b LLVDER ELSE LLVIZQ IF_BODY:c LLVDER {:
+    //Valor a devolver
+    String res = "";
+    if (Boolean.parseBoolean(a.toString())){
+        res = b.toString();
+    } else {
+        res = c.toString();
+    }
+    RESULT = res;   
+:};
+
+IF_BODY::= IF_BODY:a IF_SUBBODY:b {: RESULT = a.toString() + b.toString(); :}
+| IF_SUBBODY:a {:
     RESULT = a;
 :};
 
-ECHO_BODY::= ECHO_BODY:b DOT OPER:a {: RESULT = b+a; :}
-| OPER:a {: RESULT = a :};
+IF_SUBBODY::= INSERT_STRUCT:a {:RESULT = a; :}
+| HS_IF:a {: RESULT = a; :}
+| HS_REPETIR:a {:RESULT = a; :};
 
-HS_IF ::= BODY_IF {::}
-| BODY_IF IF_ELSE {::};
-
-BODY_IF::= IF PARIZQ  OPER:a PARDER LLVIZQ IF_BODY:b LLVDER {::};
-
-IF_BODY::= IF_BODY IF_SUBBODY
-| IF_SUBBODY {::};
-
-IF_SUBBODY::= INSERT_STRUCT:a {: RESULT = a :}
-| HS_IF: {::};
-
-IF_ELSE::= ELSE LLVIZQ IF_BODY LLDER {::};
-
-HS_REPETIR::= REPETIR PARIZQ OPER PARDER LLVIZQ HS_REPETIR_INSERT LLVDER {:
-
+HS_REPETIR::= REPETIR PARIZQ OPER:a PARDER LLVIZQ IF_BODY:b LLVDER {:
+    //Variable que se retornará
+    String res = "";
+    for(int i = 0 ; i < ( (int) Double.parseDouble(a.toString())); i++ ){
+        res += b;
+    }
+    RESULT = res;
 :};
 
-HS_REPETIR_INSERT::= HS_REPETIR_INSERT INSERT_STRUCT 
-| INSERT_STRUCT {:
-
-:};
