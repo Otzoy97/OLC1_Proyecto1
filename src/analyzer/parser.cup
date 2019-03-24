@@ -9,6 +9,7 @@ import html.Image.Dimension;
 import java.util.Queue;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import static proyecto.Proyecto.txtConsole;
 
 parser code{:
     //public boolean flag = true;
@@ -272,7 +273,7 @@ HS_BODY::= HS_VAR:a SEMICOLON
 | HS_ECHO:a SEMICOLON
 {:
     //Utilizar el nombre del atributo de la consola y utilizar setText(getText()+a)
-    //Descolar toda la lista
+    txtConsole.setText(txtConsole.getText()+"\n"+a.toString());
     RESULT="";
 :}
 | HS_IF:a 

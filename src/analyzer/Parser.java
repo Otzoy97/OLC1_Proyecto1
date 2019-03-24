@@ -15,6 +15,7 @@ import java.util.Queue;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java_cup.runtime.XMLElement;
+import static proyecto.Proyecto.txtConsole;
 
 /** CUP v0.11b 20160615 (GIT 4ac7450) generated parser.
   */
@@ -731,15 +732,17 @@ public class Parser extends java_cup.runtime.lr_parser {
      * Cola de errores
      */
     public ArrayList<String> errores = new ArrayList();
+    public int contador =1;
     /*Errores*/
     public void syntax_error (Symbol s){
         StringBuilder sb = new StringBuilder();
         sb.append("<tr>");
-        sb.append("<td>").append("Leve").append("</td>");
-        sb.append("<td>").append(s.right+"").append("</td>");
-        sb.append("<td>").append(s.left+"").append("</td>");
-        sb.append("<td>").append(s.value+"").append("</td>");
-        sb.append("<td>").append(s.sym+"").append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(contador++).append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append("Leve").append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(s.right+"").append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(s.left+"").append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(s.value+"").append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(s.sym+"").append("</td>");
         sb.append("</tr>");
         errores.add(sb.toString());
     }
@@ -747,11 +750,11 @@ public class Parser extends java_cup.runtime.lr_parser {
     public void unrecovered_syntax_error(Symbol s){ 
         StringBuilder sb = new StringBuilder();
         sb.append("<tr>");
-        sb.append("<td>").append("Grave").append("</td>");
-        sb.append("<td>").append(s.right+"").append("</td>");
-        sb.append("<td>").append(s.left+"").append("</td>");
-        sb.append("<td>").append(s.value+"").append("</td>");
-        sb.append("<td>").append(s.sym+"").append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(contador++).append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(s.right+"").append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(s.left+"").append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(s.value+"").append("</td>");
+        sb.append("<td class=\"tg-baqh\">").append(s.sym+"").append("</td>");
         sb.append("</tr>");
         errores.add(sb.toString());
     }
@@ -1643,7 +1646,7 @@ class CUP$Parser$actions {
 		String a = (String)((java_cup.runtime.Symbol) CUP$Parser$stack.elementAt(CUP$Parser$top-1)).value;
 		
     //Utilizar el nombre del atributo de la consola y utilizar setText(getText()+a)
-    //Descolar toda la lista
+    txtConsole.setText(txtConsole.getText()+"\n"+a.toString());
     RESULT="";
 
               CUP$Parser$result = parser.getSymbolFactory().newSymbol("HS_BODY",21, ((java_cup.runtime.Symbol)CUP$Parser$stack.elementAt(CUP$Parser$top-1)), ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()), RESULT);
