@@ -6,9 +6,6 @@
 package html.hscript;
 
 import html.ComponentHTML;
-import java.util.Queue;
-import java.util.ArrayList;
-import java.util.LinkedList;
 
 /**
  * Dado que HScript es un entorno de "programación" totalmente diferente al de
@@ -25,18 +22,20 @@ import java.util.LinkedList;
  * @author otzoy
  */
 public class Estructura implements HScript {
+
     /**
-     * 
+     *
      */
     private String identificador;
     /**
-     * 
+     *
      */
     private Struct struct;
     /**
-     * 
+     *
      */
     private ComponentHTML componente;
+
     /**
      * Determina qué estructura se creará, modificará o insertará
      */
@@ -48,16 +47,17 @@ public class Estructura implements HScript {
         TABLA_,
         BOTON_
     }
+
     /**
-     * 
+     *
      * @param identificador
      * @param struct
-     * @param componente 
+     * @param componente
      */
     public Estructura(String identificador, ComponentHTML componente) {
         this.identificador = identificador;
         this.componente = componente;
-        switch(componente.getClass().getSimpleName()){
+        switch (componente.getClass().getSimpleName()) {
             case "Paragraph":
                 this.struct = Struct.PARRAFO_;
                 break;
