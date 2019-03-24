@@ -11,9 +11,9 @@ import html.ComponentHTML;
  * @author otzoy
  */
 public class Row implements ComponentHTML {
-    private Queue<Column> columnas;
+    private Queue<ComponentHTML> columnas;
 
-    public Row(Queue<Column> columnas) {
+    public Row(Queue<ComponentHTML> columnas) {
         this.columnas = columnas;
     }
     /**
