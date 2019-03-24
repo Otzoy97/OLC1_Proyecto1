@@ -16,7 +16,15 @@ import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
+import analyzer.Scanner;
+import analyzer.Parser;
+import analyzer.Token;
+import html.hscript.Variable;
+import java.io.StringReader;
+import java.util.LinkedList;
+import java_cup.runtime.Symbol;
+import static javax.swing.JOptionPane.showMessageDialog;
+import javax.swing.table.DefaultTableModel;
 /**
  *
  * @author otzoy
@@ -28,7 +36,8 @@ public class Proyecto extends javax.swing.JFrame {
     private JFileChooser jsave = new JFileChooser();
     private File tkErrores = null;
     private File tkLexico = null;
-    private File tkSintactico = null;  
+    private File tkSintactico = null;
+    private File fileHTML = null;
 
     /**
      * Creates new form proyecto
@@ -99,7 +108,6 @@ public class Proyecto extends javax.swing.JFrame {
         setTitle("[OLC1] - Proyecto 1");
         setIconImage(new javax.swing.ImageIcon(getClass().getResource("/res/seo.png")).getImage());
         setMinimumSize(new java.awt.Dimension(800, 600));
-        setPreferredSize(new java.awt.Dimension(1024, 720));
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
         tabTop.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -127,7 +135,7 @@ public class Proyecto extends javax.swing.JFrame {
         panelOutputTop.setLayout(new java.awt.GridBagLayout());
 
         cmbActionResult.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
-        cmbActionResult.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbActionResult.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Reporte de Tokens", "Errores léxicos", "Errores sintácticos","Resultado" }));
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
@@ -240,15 +248,20 @@ public class Proyecto extends javax.swing.JFrame {
         tableVar.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
         tableVar.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {},
-                {},
-                {},
-                {}
+
             },
             new String [] {
-
+                "Id", "Tipo", "Valor", "Linea", "Columna"
             }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
         jScrollPane3.setViewportView(tableVar);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -313,6 +326,11 @@ public class Proyecto extends javax.swing.JFrame {
 
         itemCompilar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F6, 0));
         itemCompilar.setText("Compilar");
+        itemCompilar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                itemCompilarActionPerformed(evt);
+            }
+        });
         menuArchivo.add(itemCompilar);
 
         jMenuBar1.add(menuArchivo);
@@ -352,6 +370,16 @@ public class Proyecto extends javax.swing.JFrame {
 
     private void itemNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemNuevoActionPerformed
         // TODO add your handling code here:
+        //Solicita guardar el archivo actual
+        if (!this.nameFile.isEmpty()) {
+            this.guardar();
+        } else {
+            this.guardarComo();
+        }
+        //Elimina el contenido actual del input
+        this.txtInput.setText("");
+        //Limpia la dirección del archivo
+        this.nameFile = "";
     }//GEN-LAST:event_itemNuevoActionPerformed
 
     private void itemAcercaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAcercaActionPerformed
@@ -367,42 +395,72 @@ public class Proyecto extends javax.swing.JFrame {
     private void itemAbrirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAbrirActionPerformed
         // TODO add your handling code here:
         jabrir.setDialogTitle("Seleccionar archivo...");
-        FileNameExtensionFilter ext = new FileNameExtensionFilter("Archivo código web",new String[]{"uweb","UWEB"});
+        FileNameExtensionFilter ext = new FileNameExtensionFilter("Archivo código web", new String[]{"uweb", "UWEB"});
         jabrir.setAcceptAllFileFilterUsed(false);
         jabrir.setFileFilter(ext);
         int resultChoose = jabrir.showOpenDialog(this);
-        if (resultChoose== JFileChooser.APPROVE_OPTION) {
+        if (resultChoose == JFileChooser.APPROVE_OPTION) {
             this.nameFile = jabrir.getSelectedFile().getAbsolutePath();
             String nombreArchivo = jabrir.getSelectedFile().getName();
-            String linea,output = "";
+            String linea, output = "";
             try {
                 FileReader fileReader = new FileReader(nameFile);
                 try (BufferedReader bfReader = new BufferedReader(fileReader)) {
-                    while((linea=bfReader.readLine())!=null){
-                        output+=linea + "\n";
+                    while ((linea = bfReader.readLine()) != null) {
+                        output += linea + "\n";
                     }
-                    this.setTitle("[OLC1] - Practica 1 : "+nombreArchivo);
+                    this.setTitle("[OLC1] - Practica 1 : " + nombreArchivo);
                     this.txtInput.setText(output);
                     jabrir.setCurrentDirectory(new File(nameFile));
                 }
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Ocurrió un error al leer el archivo.\n"+ex.getMessage(), "[OLC1] - Practica 1", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Ocurrió un error al leer el archivo.\n" + ex.getMessage(), "[OLC1] - Practica 1", JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, "No se cargó el archivo", "[OLC1] - Proyecto 1", JOptionPane.WARNING_MESSAGE);
         }
-        
-    }//GEN-LAST:event_itemAbrirActionPerformed
 
+    }//GEN-LAST:event_itemAbrirActionPerformed
+    /**
+     * Analisa léxicamente y sintácticamente un archivo para generar :
+     * un archivo de salida
+     * informe de tokens
+     * informe de errores léxicos
+     * informe de errores sintácticos
+     * @param evt 
+     */
+    private void itemCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemCompilarActionPerformed
+        // TODO add your handling code here:
+        //Limpia el texto de consola y la tabla de variables actual
+        Proyecto.txtConsole.setText("");
+        //Instancia un objeto de Scanner
+        //Luego instancia un objeto parser
+        //Recupera las listas u objetos que generó el parser
+        Scanner scan = new analyzer.Scanner(new BufferedReader(new StringReader(this.txtInput.getText())));
+        //Realiza el informe léxico
+        this.construirInformeLexico(scan);
+        Parser parser = new Parser(scan);
+        try {
+            parser.parse();
+            //Realiza el inform sintáctico
+            this.construirInformeSintactico(parser);
+            this.makeFile(parser.html_file.getHtml(),"ArchivoResultante.html", this.fileHTML );
+        } catch (Exception ex){
+            showMessageDialog(this, ex.getMessage() + " " + ex.getLocalizedMessage() + " " , "[OLC1] Proyecto 1 - Parser", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_itemCompilarActionPerformed
+    /**
+     * Especifica una nueva ruta para el archivo
+     */
     private void guardarComo() {
         jsave.setDialogTitle("Guardar como...");
-        FileNameExtensionFilter ext = new FileNameExtensionFilter("Archivo código web",new String[]{"uweb","UWEB"});
+        FileNameExtensionFilter ext = new FileNameExtensionFilter("Archivo código web", new String[]{"uweb", "UWEB"});
         jsave.setAcceptAllFileFilterUsed(false);
         jsave.setFileFilter(ext);
         int resultSave = jsave.showSaveDialog(this);
         if (resultSave == JFileChooser.APPROVE_OPTION) {
-            this.nameFile = jsave.getSelectedFile().getAbsolutePath()+".uweb";
-            String nombreArchivo = this.jsave.getSelectedFile().getName()+".uweb";
+            this.nameFile = jsave.getSelectedFile().getAbsolutePath() + ".uweb";
+            String nombreArchivo = this.jsave.getSelectedFile().getName() + ".uweb";
             FileWriter fileWriter = null;
             BufferedWriter bfWriter = null;
             File fileSave;
@@ -411,21 +469,27 @@ public class Proyecto extends javax.swing.JFrame {
                 fileWriter = new FileWriter(fileSave);
                 bfWriter = new BufferedWriter(fileWriter);
                 bfWriter.write(this.txtInput.getText());
-                this.setTitle("[OLC1] - Proyecto 1 : "+nombreArchivo);
+                this.setTitle("[OLC1] - Proyecto 1 : " + nombreArchivo);
                 jsave.setCurrentDirectory(fileSave);
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Ocurrió un error al escribir el archivo.\n"+ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Ocurrió un error al escribir el archivo.\n" + ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
             } finally {
                 try {
-                    if (bfWriter != null) bfWriter.close();
-                    if (fileWriter!=null) fileWriter.close();
+                    if (bfWriter != null) {
+                        bfWriter.close();
+                    }
+                    if (fileWriter != null) {
+                        fileWriter.close();
+                    }
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(this, ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
                 }
             }
-        } 
+        }
     }
-
+    /**
+     * Guarda el archivo actual
+     */
     private void guardar() {
         if (!this.nameFile.isEmpty()) {
             FileWriter fileWriter = null;
@@ -436,20 +500,196 @@ public class Proyecto extends javax.swing.JFrame {
                 fileWriter = new FileWriter(fileSave);
                 bfWriter = new BufferedWriter(fileWriter);
                 bfWriter.write(this.txtInput.getText());
-                this.setTitle("[OLC1] - Proyecto 1 : "+fileSave.getName());
+                this.setTitle("[OLC1] - Proyecto 1 : " + fileSave.getName());
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Ocurrió un error al escribir el archivo.\n"+ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Ocurrió un error al escribir el archivo.\n" + ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
             } finally {
                 try {
-                    if (bfWriter != null) bfWriter.close();
-                    if (fileWriter!=null) fileWriter.close();
+                    if (bfWriter != null) {
+                        bfWriter.close();
+                    }
+                    if (fileWriter != null) {
+                        fileWriter.close();
+                    }
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(this, ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }
     }
-
+    /**
+     * Realiza el informe de erroes léxico y el informe general de tokens
+     * @param scan 
+     */
+    private void construirInformeLexico(Scanner scan){   
+        //Recupera ambas listas
+        LinkedList<Token> tk = scan.LexTok;
+        LinkedList<Token> terr = scan.LexErr;
+        //Desde acá se construirá la cadena HTML
+        StringBuilder sb = new StringBuilder();
+        //Recorre ambas listas y arma una tabla HTML
+        sb.append("<!DOCTYPE html>\n");
+        sb.append("<html>\n");
+        sb.append("<head>\n");
+        sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"UTF-8\" />\n");
+        sb.append("<title>\n").append("Análisis léxico").append("</title>\n");        
+        sb.append("</head>\n"); 
+        sb.append("<style>\n");        
+        sb.append(".tg  {border-collapse:collapse;border-spacing:0;border-color:#aaa;margin:0px auto;}\n" +
+".tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#333;background-color:#fff;}\n" +
+".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#fff;background-color:#f38630;}\n" +
+".tg .tg-baqh{text-align:center;vertical-align:top}\n" +
+".tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}\n" +
+"@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}");
+        sb.append("</style>\n");
+        sb.append("<body>\n");        
+        sb.append("<div class=\"tg-wrap\">\n");
+        sb.append("<table class=\"tg\">");
+        sb.append("<tr>");
+        sb.append("<th  class=\"tg-baqh\">").append("No.").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Fila").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Columna").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Lexema").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Token").append("</th>");
+        sb.append("</tr>");
+        //este contador servirá para contar los tokens encontrados
+        int contador = 1;
+        //Obtiene la forma HTML del token
+        for(Token token : tk){
+            sb.append(token.getToken(contador++));
+        }
+        sb.append("</table>");
+        sb.append("</div>\n");
+        sb.append("</body>\n");
+        sb.append("</html>\n");
+        //Manda a hacer el fichero
+        this.makeFile(sb.toString(), "Análisis_Lexico", this.tkLexico);
+        //Limpia el stringbuilder
+        sb = new StringBuilder();
+        //---------------Ahora realiza el mismo procedimiento
+        //con los erroes
+        //Añade el encabezado anteriormente guardado
+        sb.append("<!DOCTYPE html>\n");
+        sb.append("<html>\n");
+        sb.append("<head>\n");
+        sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"UTF-8\" />\n");
+        sb.append("<title>\n").append("Errores léxico").append("</title>\n");        
+        sb.append("</head>\n"); 
+        sb.append("<style>\n");        
+        sb.append(".tg  {border-collapse:collapse;border-spacing:0;border-color:#aaa;margin:0px auto;}\n" +
+".tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#333;background-color:#fff;}\n" +
+".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#fff;background-color:#f38630;}\n" +
+".tg .tg-baqh{text-align:center;vertical-align:top}\n" +
+".tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}\n" +
+"@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}");
+        sb.append("</style>\n");
+        sb.append("<body>\n");        
+        sb.append("<div class=\"tg-wrap\">\n");
+        sb.append("<table class=\"tg\">");
+        sb.append("<tr>");
+        sb.append("<th  class=\"tg-baqh\">").append("No.").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Fila").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Columna").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Lexema").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Token").append("</th>");
+        sb.append("</tr>");
+        //reinicia el contador
+        contador = 1;
+        //Obtiene la forma HTML del token
+        for(Token token : terr){
+            sb.append(token.getToken(contador++));
+        }
+        sb.append("</table>");
+        sb.append("</div>\n");
+        sb.append("</body>\n");
+        sb.append("</html>\n");
+        //Manda a hacer el fichero
+        this.makeFile(sb.toString(), "Errores_Lexicos", this.tkErrores);
+    }
+    /**
+     * Realiza el informe de errores sintácticos
+     * @param parser 
+     */
+    private void construirInformeSintactico(Parser parser){
+        //Desde acá se construirá la cadena HTML
+        StringBuilder sb = new StringBuilder();
+        //Recorre ambas listas y arma una tabla HTML
+        sb.append("<!DOCTYPE html>\n");
+        sb.append("<html>\n");
+        sb.append("<head>\n");
+        sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"UTF-8\" />\n");
+        sb.append("<title>\n").append("Errores sintácticos").append("</title>\n");        
+        sb.append("</head>\n"); 
+        sb.append("<style>\n");        
+        sb.append(".tg  {border-collapse:collapse;border-spacing:0;border-color:#aaa;margin:0px auto;}\n" +
+".tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#333;background-color:#fff;}\n" +
+".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#fff;background-color:#f38630;}\n" +
+".tg .tg-baqh{text-align:center;vertical-align:top}\n" +
+".tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}\n" +
+"@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}");
+        sb.append("</style>\n");
+        sb.append("<body>\n");        
+        sb.append("<div class=\"tg-wrap\">\n");
+        sb.append("<table class=\"tg\">");
+        sb.append("<tr>");
+        sb.append("<th  class=\"tg-baqh\">").append("No.").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Tipo").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Fila").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Columa").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Lexema").append("</th>");
+        sb.append("<th  class=\"tg-baqh\" >").append("Token").append("</th>");
+        sb.append("</tr>");
+        parser.errores.forEach((str) -> {
+            sb.append(str);
+        });
+        sb.append("</table>");
+        sb.append("</div>\n");
+        sb.append("</body>\n");
+        sb.append("</html>\n");
+        //Manda a hacer el fichero
+        this.makeFile(sb.toString(), "Errores sintácticos", this.tkSintactico);
+    }   
+    /**
+     * Construye el archivo para los infomes
+     * @param cadena 
+     */
+    private void makeFile(String cadena, String titulo, File file){
+        FileWriter fileWriter = null;
+        BufferedWriter bfWriter = null;
+        try {
+            file = new File(titulo+".html");
+            fileWriter = new FileWriter(file);
+            bfWriter = new BufferedWriter(fileWriter);
+            bfWriter.write(cadena);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Ocurrió un error al escribir el archivo.\n"+ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if(bfWriter!=null)bfWriter.close();
+                if(fileWriter!=null)fileWriter.close();
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    /**
+     * Llena la tabla de variables
+     * @param parser 
+     */
+    private void llenarTabla(Parser parser){
+        //Recupera el modelo de la tabla
+        DefaultTableModel tableModel = (DefaultTableModel) this.tableVar.getModel();
+        //Limpia la tabla
+        for(int i = 0 ; i< tableModel.getRowCount(); i++){
+            //Remueve todas las filas
+            tableModel.removeRow(i);
+        }
+        //Llena la tabla conlos datos del parser
+        for(Variable var : parser.listaVariable){
+            //Añade la información
+            tableModel.addRow(new Object[]{});
+        }
+    }
     /**
      * @param args the command line arguments
      */
@@ -511,7 +751,7 @@ public class Proyecto extends javax.swing.JFrame {
     private javax.swing.JTabbedPane tabOutputBottom;
     private javax.swing.JTabbedPane tabTop;
     private javax.swing.JTable tableVar;
-    private javax.swing.JTextArea txtConsole;
+    public static javax.swing.JTextArea txtConsole;
     private javax.swing.JTextArea txtInput;
     private javax.swing.JTextArea txtResult;
     // End of variables declaration//GEN-END:variables
