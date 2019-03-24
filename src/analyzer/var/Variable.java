@@ -28,24 +28,25 @@ public class Variable {
         this.columna = columna;
     }
 
-    public void setObjeto(Object objeto) {
-        this.objeto = objeto;
+    public Object getObjeto() {
+        return objeto;
     }
 
-    public void setTipo(Var tipo) {
-        this.tipo = tipo;
+    public Var getTipo() {
+        return tipo;
     }
 
-    public void setIdentificador(String identificador) {
-        this.identificador = identificador;
+    public String getIdentificador() {
+        return identificador;
     }
 
-    public void setFila(int fila) {
-        this.fila = fila;
+    public int getFila() {
+        return fila;
     }
 
-    public void setColumna(int columna) {
-        this.columna = columna;
+    public int getColumna() {
+        return columna;
     }
-    9
+
+
 }
