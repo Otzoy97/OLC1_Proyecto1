@@ -20,11 +20,13 @@ import analyzer.Scanner;
 import analyzer.Parser;
 import analyzer.Token;
 import html.hscript.Variable;
+import java.awt.Desktop;
 import java.io.StringReader;
 import java.util.LinkedList;
-import java_cup.runtime.Symbol;
+import javax.swing.JComboBox;
 import static javax.swing.JOptionPane.showMessageDialog;
 import javax.swing.table.DefaultTableModel;
+
 /**
  *
  * @author otzoy
@@ -44,6 +46,8 @@ public class Proyecto extends javax.swing.JFrame {
      */
     public Proyecto() {
         initComponents();
+        this.editHtml.setEditable(false);
+        this.txtResult.setEditable(false);
     }
 
     public BufferedImage getImageIcon() {
@@ -135,7 +139,13 @@ public class Proyecto extends javax.swing.JFrame {
         panelOutputTop.setLayout(new java.awt.GridBagLayout());
 
         cmbActionResult.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
-        cmbActionResult.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Reporte de Tokens", "Errores léxicos", "Errores sintácticos","Resultado" }));
+        cmbActionResult.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Archivo de salida", "Reporte de tokens", "Errores léxicos", "Errores sintácticos" }));
+        cmbActionResult.setToolTipText("");
+        cmbActionResult.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cmbActionResultItemStateChanged(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
@@ -146,6 +156,11 @@ public class Proyecto extends javax.swing.JFrame {
 
         btnAbrirNavegador.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
         btnAbrirNavegador.setText("Abrir con navegador");
+        btnAbrirNavegador.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAbrirNavegadorActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
@@ -358,7 +373,10 @@ public class Proyecto extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
+    /**
+     * Guarda el archivo actual, si no existe un archivo actual solicita al usuario a guardar un nuevo
+     * @param evt 
+     */
     private void itemGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemGuardarActionPerformed
         // TODO add your handling code here:
         if (!this.nameFile.isEmpty()) {
@@ -367,7 +385,11 @@ public class Proyecto extends javax.swing.JFrame {
             this.guardarComo();
         }
     }//GEN-LAST:event_itemGuardarActionPerformed
-
+    /**
+     * Solicita al usuario guardar el archivo actual, o si ya existe solo lo guarda
+     * Limpia la dirección del archivo actual y limpia el txtInput
+     * @param evt 
+     */
     private void itemNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemNuevoActionPerformed
         // TODO add your handling code here:
         //Solicita guardar el archivo actual
@@ -381,17 +403,26 @@ public class Proyecto extends javax.swing.JFrame {
         //Limpia la dirección del archivo
         this.nameFile = "";
     }//GEN-LAST:event_itemNuevoActionPerformed
-
+    /**
+     * Despliega un mensaje con mi información uwu
+     * @param evt 
+     */
     private void itemAcercaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAcercaActionPerformed
         // TODO add your handling code here:
         javax.swing.JOptionPane.showMessageDialog(this, "201602782\nSergio Fernando Otzoy Gonzalez", "[OLC1] - Proyecto 1", JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_itemAcercaActionPerformed
-
+    /**
+     * Guarda el archivo actual
+     * @param evt 
+     */
     private void itemGuardarComoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemGuardarComoActionPerformed
         // TODO add your handling code here:
         this.guardarComo();
     }//GEN-LAST:event_itemGuardarComoActionPerformed
-
+    /**
+     * Despliega un filechooser para especificar la dirección del archivo a abrir
+     * @param evt 
+     */
     private void itemAbrirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAbrirActionPerformed
         // TODO add your handling code here:
         jabrir.setDialogTitle("Seleccionar archivo...");
@@ -422,16 +453,15 @@ public class Proyecto extends javax.swing.JFrame {
 
     }//GEN-LAST:event_itemAbrirActionPerformed
     /**
-     * Analisa léxicamente y sintácticamente un archivo para generar :
-     * un archivo de salida
-     * informe de tokens
-     * informe de errores léxicos
-     * informe de errores sintácticos
-     * @param evt 
+     * Analiza léxicamente y sintácticamente un archivo para generar : un
+     * archivo de salida informe de tokens informe de errores léxicos informe de
+     * errores sintácticos
+     *
+     * @param evt
      */
     private void itemCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemCompilarActionPerformed
         // TODO add your handling code here:
-        //Limpia el texto de consola y la tabla de variables actual
+        //Limpia el texto de consola
         Proyecto.txtConsole.setText("");
         //Instancia un objeto de Scanner
         //Luego instancia un objeto parser
@@ -444,11 +474,69 @@ public class Proyecto extends javax.swing.JFrame {
             parser.parse();
             //Realiza el inform sintáctico
             this.construirInformeSintactico(parser);
-            this.makeFile(parser.html_file.getHtml(),"ArchivoResultante.html", this.fileHTML );
-        } catch (Exception ex){
-            showMessageDialog(this, ex.getMessage() + " " + ex.getLocalizedMessage() + " " , "[OLC1] Proyecto 1 - Parser", JOptionPane.ERROR_MESSAGE);
+            //Llena la tabla de variables
+            this.llenarTabla(parser);
+            //Genera el archivo de salida
+            this.makeFile(parser.html_file.getHtml(), "ArchivoResultante.html", this.fileHTML);
+        } catch (Exception ex) {
+            showMessageDialog(this, ex.getMessage() + " " + ex.getLocalizedMessage() + " ", "[OLC1] Proyecto 1 - Parser", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_itemCompilarActionPerformed
+    /**
+     * 
+     * @param evt 
+     */
+    private void btnAbrirNavegadorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAbrirNavegadorActionPerformed
+        // TODO add your handling code here:
+        try{
+            switch( ( (JComboBox) evt.getSource()).getSelectedIndex()){
+                case 0:
+                    Desktop.getDesktop().browse(this.fileHTML.toURI());
+                    break;
+                case 1:
+                    Desktop.getDesktop().browse(this.tkLexico.toURI());
+                    break;
+                case 2:
+                    Desktop.getDesktop().browse(this.tkErrores.toURI());
+                    break;
+                case 3:
+                    Desktop.getDesktop().browse(this.tkSintactico.toURI());
+                    break;
+            }
+        } catch(IOException e){
+            JOptionPane.showMessageDialog(this, "Nada que mostrar", "[OLC1 - Proyecto 1]", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }//GEN-LAST:event_btnAbrirNavegadorActionPerformed
+    
+    /**
+     * Al cambiar el indice cambiará la vista del editor pane
+     *
+     * @param evt
+     */
+    private void cmbActionResultItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cmbActionResultItemStateChanged
+        // TODO add your handling code here:
+        try{
+            if (evt.getStateChange() == 1){
+                switch( ( (JComboBox) evt.getSource()).getSelectedIndex()){
+                    case 0:
+                        this.editHtml.setPage(this.fileHTML.getAbsolutePath());
+                        break;
+                    case 1:
+                        this.editHtml.setPage(this.tkLexico.getAbsolutePath());
+                        break;
+                    case 2:
+                        this.editHtml.setPage(this.tkErrores.getAbsolutePath());
+                        break;
+                    case 3:
+                        this.editHtml.setPage(this.tkSintactico.getAbsolutePath());
+                        break;
+                }
+            }
+        } catch(IOException e){
+            JOptionPane.showMessageDialog(this, "Nada que mostrar", "[OLC1 - Proyecto 1]", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }//GEN-LAST:event_cmbActionResultItemStateChanged
+   
     /**
      * Especifica una nueva ruta para el archivo
      */
@@ -487,6 +575,7 @@ public class Proyecto extends javax.swing.JFrame {
             }
         }
     }
+
     /**
      * Guarda el archivo actual
      */
@@ -517,11 +606,13 @@ public class Proyecto extends javax.swing.JFrame {
             }
         }
     }
+
     /**
      * Realiza el informe de erroes léxico y el informe general de tokens
-     * @param scan 
+     *
+     * @param scan
      */
-    private void construirInformeLexico(Scanner scan){   
+    private void construirInformeLexico(Scanner scan) {
         //Recupera ambas listas
         LinkedList<Token> tk = scan.LexTok;
         LinkedList<Token> terr = scan.LexErr;
@@ -532,17 +623,17 @@ public class Proyecto extends javax.swing.JFrame {
         sb.append("<html>\n");
         sb.append("<head>\n");
         sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"UTF-8\" />\n");
-        sb.append("<title>\n").append("Análisis léxico").append("</title>\n");        
-        sb.append("</head>\n"); 
-        sb.append("<style>\n");        
-        sb.append(".tg  {border-collapse:collapse;border-spacing:0;border-color:#aaa;margin:0px auto;}\n" +
-".tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#333;background-color:#fff;}\n" +
-".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#fff;background-color:#f38630;}\n" +
-".tg .tg-baqh{text-align:center;vertical-align:top}\n" +
-".tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}\n" +
-"@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}");
+        sb.append("<title>\n").append("Análisis léxico").append("</title>\n");
+        sb.append("</head>\n");
+        sb.append("<style>\n");
+        sb.append(".tg  {border-collapse:collapse;border-spacing:0;border-color:#aaa;margin:0px auto;}\n"
+                + ".tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#333;background-color:#fff;}\n"
+                + ".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#fff;background-color:#f38630;}\n"
+                + ".tg .tg-baqh{text-align:center;vertical-align:top}\n"
+                + ".tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}\n"
+                + "@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}");
         sb.append("</style>\n");
-        sb.append("<body>\n");        
+        sb.append("<body>\n");
         sb.append("<div class=\"tg-wrap\">\n");
         sb.append("<table class=\"tg\">");
         sb.append("<tr>");
@@ -555,7 +646,7 @@ public class Proyecto extends javax.swing.JFrame {
         //este contador servirá para contar los tokens encontrados
         int contador = 1;
         //Obtiene la forma HTML del token
-        for(Token token : tk){
+        for (Token token : tk) {
             sb.append(token.getToken(contador++));
         }
         sb.append("</table>");
@@ -573,17 +664,17 @@ public class Proyecto extends javax.swing.JFrame {
         sb.append("<html>\n");
         sb.append("<head>\n");
         sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"UTF-8\" />\n");
-        sb.append("<title>\n").append("Errores léxico").append("</title>\n");        
-        sb.append("</head>\n"); 
-        sb.append("<style>\n");        
-        sb.append(".tg  {border-collapse:collapse;border-spacing:0;border-color:#aaa;margin:0px auto;}\n" +
-".tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#333;background-color:#fff;}\n" +
-".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#fff;background-color:#f38630;}\n" +
-".tg .tg-baqh{text-align:center;vertical-align:top}\n" +
-".tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}\n" +
-"@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}");
+        sb.append("<title>\n").append("Errores léxico").append("</title>\n");
+        sb.append("</head>\n");
+        sb.append("<style>\n");
+        sb.append(".tg  {border-collapse:collapse;border-spacing:0;border-color:#aaa;margin:0px auto;}\n"
+                + ".tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#333;background-color:#fff;}\n"
+                + ".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#fff;background-color:#f38630;}\n"
+                + ".tg .tg-baqh{text-align:center;vertical-align:top}\n"
+                + ".tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}\n"
+                + "@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}");
         sb.append("</style>\n");
-        sb.append("<body>\n");        
+        sb.append("<body>\n");
         sb.append("<div class=\"tg-wrap\">\n");
         sb.append("<table class=\"tg\">");
         sb.append("<tr>");
@@ -596,7 +687,7 @@ public class Proyecto extends javax.swing.JFrame {
         //reinicia el contador
         contador = 1;
         //Obtiene la forma HTML del token
-        for(Token token : terr){
+        for (Token token : terr) {
             sb.append(token.getToken(contador++));
         }
         sb.append("</table>");
@@ -606,11 +697,13 @@ public class Proyecto extends javax.swing.JFrame {
         //Manda a hacer el fichero
         this.makeFile(sb.toString(), "Errores_Lexicos", this.tkErrores);
     }
+
     /**
      * Realiza el informe de errores sintácticos
-     * @param parser 
+     *
+     * @param parser
      */
-    private void construirInformeSintactico(Parser parser){
+    private void construirInformeSintactico(Parser parser) {
         //Desde acá se construirá la cadena HTML
         StringBuilder sb = new StringBuilder();
         //Recorre ambas listas y arma una tabla HTML
@@ -618,17 +711,17 @@ public class Proyecto extends javax.swing.JFrame {
         sb.append("<html>\n");
         sb.append("<head>\n");
         sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"UTF-8\" />\n");
-        sb.append("<title>\n").append("Errores sintácticos").append("</title>\n");        
-        sb.append("</head>\n"); 
-        sb.append("<style>\n");        
-        sb.append(".tg  {border-collapse:collapse;border-spacing:0;border-color:#aaa;margin:0px auto;}\n" +
-".tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#333;background-color:#fff;}\n" +
-".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#fff;background-color:#f38630;}\n" +
-".tg .tg-baqh{text-align:center;vertical-align:top}\n" +
-".tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}\n" +
-"@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}");
+        sb.append("<title>\n").append("Errores sintácticos").append("</title>\n");
+        sb.append("</head>\n");
+        sb.append("<style>\n");
+        sb.append(".tg  {border-collapse:collapse;border-spacing:0;border-color:#aaa;margin:0px auto;}\n"
+                + ".tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#333;background-color:#fff;}\n"
+                + ".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-top-width:1px;border-bottom-width:1px;border-color:#aaa;color:#fff;background-color:#f38630;}\n"
+                + ".tg .tg-baqh{text-align:center;vertical-align:top}\n"
+                + ".tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}\n"
+                + "@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}");
         sb.append("</style>\n");
-        sb.append("<body>\n");        
+        sb.append("<body>\n");
         sb.append("<div class=\"tg-wrap\">\n");
         sb.append("<table class=\"tg\">");
         sb.append("<tr>");
@@ -648,48 +741,57 @@ public class Proyecto extends javax.swing.JFrame {
         sb.append("</html>\n");
         //Manda a hacer el fichero
         this.makeFile(sb.toString(), "Errores sintácticos", this.tkSintactico);
-    }   
+    }
+
     /**
      * Construye el archivo para los infomes
-     * @param cadena 
+     *
+     * @param cadena
      */
-    private void makeFile(String cadena, String titulo, File file){
+    private void makeFile(String cadena, String titulo, File file) {
         FileWriter fileWriter = null;
         BufferedWriter bfWriter = null;
         try {
-            file = new File(titulo+".html");
+            file = new File(titulo + ".html");
             fileWriter = new FileWriter(file);
             bfWriter = new BufferedWriter(fileWriter);
             bfWriter.write(cadena);
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Ocurrió un error al escribir el archivo.\n"+ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Ocurrió un error al escribir el archivo.\n" + ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
         } finally {
             try {
-                if(bfWriter!=null)bfWriter.close();
-                if(fileWriter!=null)fileWriter.close();
+                if (bfWriter != null) {
+                    bfWriter.close();
+                }
+                if (fileWriter != null) {
+                    fileWriter.close();
+                }
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
+
     /**
-     * Llena la tabla de variables
-     * @param parser 
+     * Llena la tabla del informe de variables
+     *
+     * @param parser
      */
-    private void llenarTabla(Parser parser){
+    private void llenarTabla(Parser parser) {
         //Recupera el modelo de la tabla
         DefaultTableModel tableModel = (DefaultTableModel) this.tableVar.getModel();
         //Limpia la tabla
-        for(int i = 0 ; i< tableModel.getRowCount(); i++){
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
             //Remueve todas las filas
             tableModel.removeRow(i);
         }
         //Llena la tabla conlos datos del parser
-        for(Variable var : parser.listaVariable){
+        parser.listaVariable.forEach((Variable var) -> {
             //Añade la información
-            tableModel.addRow(new Object[]{});
-        }
+            tableModel.addRow(var.getFilaInfo());
+        });
     }
+
     /**
      * @param args the command line arguments
      */

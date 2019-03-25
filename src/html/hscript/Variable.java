@@ -38,9 +38,9 @@ public class Variable implements HScript {
         return columna;
     }
 
-    public Object[] getFila(int contador){
-        Object[] objeto = new Object[]{this.identificador, this.objeto.getClass().getSimpleName(), this.objeto, this.fila, this.columna};
-        return objeto;
+    public Object[] getFilaInfo(){
+        Object[] obj = new Object[]{this.identificador, this.objeto.getClass().getSimpleName(), this.objeto, this.fila, this.columna};
+        return obj;
     }
 
 }
