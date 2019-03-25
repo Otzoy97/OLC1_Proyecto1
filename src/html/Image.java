@@ -52,7 +52,8 @@ public class Image implements ComponentHTML {
      * @param dimension 
      */
     public Image(String path, int medida, Dimension dimension){
-        this.path = path;
+        this.path = path.replace("//", "/");
+        this.path = this.path.replace("/","\\");
         switch(dimension){
             case ALTO:
                 alto = medida;

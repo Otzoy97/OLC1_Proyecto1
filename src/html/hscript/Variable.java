@@ -34,6 +34,10 @@ public class Variable implements HScript {
         return fila;
     }
 
+    public void setObjeto(Object objeto) {
+        this.objeto = objeto;
+    }
+
     public int getColumna() {
         return columna;
     }

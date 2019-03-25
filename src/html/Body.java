@@ -33,8 +33,10 @@ public class Body implements ComponentHTML {
             sb.append(" style=\"background-color: ").append(color).append(";\"");
         }
         sb.append(">\n");
+        String temp;
         while(!cuerpoHTML.isEmpty()){
-            sb.append(cuerpoHTML.poll().getHtml());
+            temp = cuerpoHTML.poll().getHtml();
+            sb.append(temp);
         }
         sb.append("</body>");
         return sb.toString();

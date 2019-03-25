@@ -9,7 +9,7 @@ import html.Image.Dimension;
 import java.util.Queue;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import static proyecto.Proyecto.txtConsole;
+//import static proyecto.Proyecto.txtConsole;
 
 parser code{:
     //public boolean flag = true;
@@ -21,11 +21,11 @@ parser code{:
     /**
      * Servirá como tabla de símbolos pero para los struct
      */
-    public ArrayList<Estructura> listaEstrucutra = new ArrayList();
+    public  ArrayList<Estructura> listaEstrucutra = new ArrayList();
     /**
      * Cola de errores
      */
-    public ArrayList<String> errores = new ArrayList();
+    public  ArrayList<String> errores = new ArrayList();
     /*Errores*/
     public void syntax_error (Symbol s){
         StringBuilder sb = new StringBuilder();
@@ -34,7 +34,7 @@ parser code{:
         sb.append("<td>").append(s.right+"").append("</td>");
         sb.append("<td>").append(s.left+"").append("</td>");
         sb.append("<td>").append(s.value+"").append("</td>");
-        sb.append("<td>").append(s.sym+"").append("</td>");
+        sb.append("<td>").append(terminalNames[s.sym]+"").append("</td>");
         sb.append("</tr>");
         errores.add(sb.toString());
     }
@@ -46,7 +46,7 @@ parser code{:
         sb.append("<td>").append(s.right+"").append("</td>");
         sb.append("<td>").append(s.left+"").append("</td>");
         sb.append("<td>").append(s.value+"").append("</td>");
-        sb.append("<td>").append(s.sym+"").append("</td>");
+        sb.append("<td>").append(terminalNames[s.sym]+"").append("</td>");
         sb.append("</tr>");
         errores.add(sb.toString());
     }
@@ -91,9 +91,9 @@ terminal INSERTAR;
 terminal String IDENTIFICADOR;
 //GENERAL
 terminal String CADENA;
-terminal int ENTERO;
-terminal Double DECIMAL;
-terminal boolean VERDADERO, FALSO;
+terminal Object ENTERO;
+terminal Object DECIMAL;
+terminal Object VERDADERO, FALSO;
 /**-----NO TERMINALES-----**/
 non terminal INICIO;
 //HTML
@@ -191,17 +191,17 @@ TEXTOB::=TEXTOB_INICIO PLAINTEXT:a TEXTOB_FINAL {: RESULT = new TextB(a.toString
 
 IMAGEN::= IMAGEN_INICIO IMG_ATR:a MAYOR_QUE IMAGEN_FINAL {: RESULT = a; :};
 
-IMG_ATR::= PATH IGUAL CADENA:a ALTO IGUAL ENTERO:b ANCHO IGUAL ENTERO:c {: RESULT = new Image(a.toString(), new Integer(b), new Integer(c)) ; :}
-|PATH IGUAL CADENA:a ANCHO IGUAL ENTERO:b ALTO IGUAL ENTERO:c {: RESULT = new Image(a.toString(), new Integer(c), new Integer(b)) ; :}
-|ALTO IGUAL ENTERO:a PATH IGUAL CADENA:b ANCHO IGUAL ENTERO:c {: RESULT = new Image(b.toString(), new Integer(a), new Integer(c)) ; :}
-|ANCHO IGUAL ENTERO:a PATH IGUAL CADENA:b ALTO IGUAL ENTERO:c {: RESULT = new Image(b.toString(), new Integer(c), new Integer(a)) ; :}
-|ALTO IGUAL ENTERO:a ANCHO IGUAL ENTERO:b PATH IGUAL CADENA:c {: RESULT = new Image(c.toString(), new Integer(a), new Integer(b)) ; :}
-|ANCHO IGUAL ENTERO:a ALTO IGUAL ENTERO:b PATH IGUAL CADENA:c {: RESULT = new Image(c.toString(), new Integer(b), new Integer(a)) ; :}
+IMG_ATR::= PATH IGUAL CADENA:a ALTO IGUAL ENTERO:b ANCHO IGUAL ENTERO:c {: RESULT = new Image(a.toString(), Integer.parseInt(b.toString()), Integer.parseInt(c.toString())) ; :}
+|PATH IGUAL CADENA:a ANCHO IGUAL ENTERO:b ALTO IGUAL ENTERO:c {: RESULT = new Image(a.toString(), Integer.parseInt(c.toString()), Integer.parseInt(b.toString())) ; :}
+|ALTO IGUAL ENTERO:a PATH IGUAL CADENA:b ANCHO IGUAL ENTERO:c {: RESULT = new Image(b.toString(), Integer.parseInt(a.toString()) ,Integer.parseInt(c.toString())) ; :}
+|ANCHO IGUAL ENTERO:a PATH IGUAL CADENA:b ALTO IGUAL ENTERO:c {: RESULT = new Image(b.toString(),Integer.parseInt(c.toString()),Integer.parseInt(a.toString())  ) ; :}
+|ALTO IGUAL ENTERO:a ANCHO IGUAL ENTERO:b PATH IGUAL CADENA:c {: RESULT = new Image(c.toString(),Integer.parseInt(a.toString()),Integer.parseInt(b.toString())) ; :}
+|ANCHO IGUAL ENTERO:a ALTO IGUAL ENTERO:b PATH IGUAL CADENA:c {: RESULT = new Image(c.toString(), Integer.parseInt(b.toString()),Integer.parseInt(a.toString()) ) ; :}
 |PATH IGUAL CADENA:a {: RESULT = new Image(a.toString()); :}
-|PATH IGUAL CADENA:a ALTO IGUAL ENTERO:b {: RESULT = new Image(a.toString(), new Integer(b), Dimension.ALTO); :}
-|ALTO IGUAL ENTERO:a PATH IGUAL CADENA:b {: RESULT = new Image(b.toString(), new Integer(a), Dimension.ALTO); :}
-|PATH IGUAL CADENA:a ANCHO IGUAL ENTERO:b {: RESULT = new Image(a.toString(), new Integer(b), Dimension.ANCHO); :}
-|ANCHO IGUAL ENTERO:a PATH IGUAL CADENA:b {: RESULT = new Image(b.toString(), new Integer(a), Dimension.ANCHO); :};
+|PATH IGUAL CADENA:a ALTO IGUAL ENTERO:b {: RESULT = new Image(a.toString(), Integer.parseInt(b.toString()), Dimension.ALTO); :}
+|ALTO IGUAL ENTERO:a PATH IGUAL CADENA:b {: RESULT = new Image(b.toString(), Integer.parseInt(a.toString()) , Dimension.ALTO); :}
+|PATH IGUAL CADENA:a ANCHO IGUAL ENTERO:b {: RESULT = new Image(a.toString(), Integer.parseInt(b.toString()), Dimension.ANCHO); :}
+|ANCHO IGUAL ENTERO:a PATH IGUAL CADENA:b {: RESULT = new Image(b.toString(), Integer.parseInt(a.toString()) , Dimension.ANCHO); :};
 
 BOTON::= BOTON_INICIO BTN_ATR:a MAYOR_QUE BOTON_FINAL {: RESULT = a; :};
 
@@ -260,58 +260,46 @@ HSCRIPT::= HSCRIPT_INICIO HS_INICIO:a HSCRIPT_FINAL
 HS_INICIO::= HS_INICIO:a HS_BODY:b {: RESULT = a + b ;:}
 | HS_BODY:a {: RESULT = a; :};
 
-HS_BODY::= HS_VAR:a SEMICOLON
-{:
-    listaVariable.add(a);
-    RESULT = "";
-:}  
-| HS_STRUCT:a SEMICOLON 
-{:
-    listaEstrucutra.add(a);
-    RESULT="";
-:}
-| HS_ECHO:a SEMICOLON
-{:
-    //Utilizar el nombre del atributo de la consola y utilizar setText(getText()+a)
+HS_BODY::= HS_VAR SEMICOLON {:  RESULT = ""; :}  
+| HS_STRUCT:a SEMICOLON {: listaEstrucutra.add(a); RESULT=""; :}
+| HS_ECHO:a SEMICOLON {:
+    /*Utilizar el nombre del atributo de la consola y utilizar setText(getText()+a)*/
     txtConsole.setText(txtConsole.getText()+"\n"+a.toString());
-    RESULT="";
-:}
-| HS_IF:a 
-{:
-    //Viene una cadena vacía o llena de algo :v
-    RESULT=a.toString();
-:}
-| HS_REPETIR:a
-{:
-    //Viene una cadena vacía o llena de algo :v
-    RESULT=a.toString();
-:}
-| SET_STRUCT {: RESULT="";:}
-| GET_STRUCT {:RESULT="";:}
-| INSERT_STRUCT:a
-{:
-    RESULT= a;
-:} 
-| BOTON_STRUCT {:RESULT="";:} ;
+    RESULT=""; :}
+| HS_IF:a  {:  /*Viene una cadena vacía o llena de algo :v */    RESULT=a.toString(); :}
+| HS_REPETIR:a {: /*Viene una cadena vacía o llena de algo :v */ RESULT=a.toString(); :}
+| SET_STRUCT SEMICOLON {: RESULT="";:}
+| INSERT_STRUCT:a SEMICOLON {:  RESULT= a; :} 
+| BOTON_STRUCT SEMICOLON {:RESULT="";:} ;
 
 HS_VAR::= IDENTIFICADOR:a IGUAL OPER:b
 {:
     //Retorna una nueva variable;
-    RESULT = new Variable(b,a.toString().substring(1), ((java_cup.runtime.Symbol)a).left ,((java_cup.runtime.Symbol)a).right);
+    boolean flag = false;
+    for(Variable var : listaVariable){
+        if(var.getIdentificador().equals(a.toString().substring(1))){
+            var.setObjeto(b);
+            flag = true;
+            break;
+        }
+    }
+    if (!flag){
+        listaVariable.add(new Variable(b,a.toString().substring(1),temp.right , temp.left));
+    }
 :};
 
 HS_STRUCT ::= ESTRUCTURA:a IGUAL FUNCSTRUCT:b
 {:
     //Retorna una nueva estructura
-    RESULT = new Estructura(a, b);
+    RESULT = new Estructura(a.toString().substring(1), b);
 :};
 
 OPER ::= OPER:a MAS OPER:b {: RESULT = ( Double.parseDouble(a.toString()) + Double.parseDouble(b.toString()));  :}
 | OPER:a MENOS OPER:b {: RESULT = ( Double.parseDouble(a.toString()) - Double.parseDouble(b.toString()));  :}
 | OPER:a PRODUCTO OPER:b {: RESULT = ( Double.parseDouble(a.toString()) * Double.parseDouble(b.toString()));  :}
 | OPER:a DIVISION OPER:b {: RESULT = ( Double.parseDouble(a.toString()) / Double.parseDouble(b.toString()));  :}
-| PARDER OPER:a PARDER {: RESULT = a;:}
-| OPER:a AND OPER:b {: RESULT = (Boolean.parseBoolean(a.toString()) == Boolean.parseBoolean(b.toString()) ); :}
+| PARIZQ OPER:a PARDER {: RESULT = a;:}
+| OPER:a AND OPER:b {: RESULT = (Boolean.parseBoolean(a.toString()) && Boolean.parseBoolean(b.toString()) ); :}
 | OPER:a OR OPER:b {: RESULT = (Boolean.parseBoolean(a.toString()) || Boolean.parseBoolean(b.toString()) ); :}
 | OPER:a MAYOR_QUE OPER:b {: RESULT = ( Double.parseDouble(a.toString()) > Double.parseDouble(b.toString()) ); :}
 | OPER:a MENOR_QUE OPER:b {: RESULT = ( Double.parseDouble(a.toString()) < Double.parseDouble(b.toString()) ); :}
@@ -335,30 +323,16 @@ OPER ::= OPER:a MAS OPER:b {: RESULT = ( Double.parseDouble(a.toString()) + Doub
     }
     RESULT = res;
 :}
-| CADENA:a {:RESULT = a.toString();:}
+| CADENA:a {:  RESULT = a.toString();:}
 | BOOLEANO:a {: RESULT = a; :}
 | GET_STRUCT:a {: RESULT = a; :};
 
-
-
-FUNCSTRUCT::= CREARPARRAFO PARIZQ PAR_BODY:a PARDER {:
-    RESULT = a;
-:}
-| CREARTEXTOA PARIZQ OPER:a PARDER {:
-    RESULT = new TextA(a.toString());
-:}
-| CREARTEXTOB PARIZQ OPER:a PARDER {:
-    RESULT = new TextB(a.toString());
-:}
-| CREARIMAGEN PARIZQ IMG_BODY:a PARDER {:
-    RESULT = a;
-:}
-| CREARTABLA PARIZQ TBL_BODY:a PARDER {:
-    RESULT = new Table(a,false);
-:}
-| CREARBOTON PARIZQ OPER:a COMMA OPER:b PARDER {:
-    RESULT = new Button(b.toString(),a.toString());
-:};
+FUNCSTRUCT::= CREARPARRAFO PARIZQ PAR_BODY:a PARDER {: RESULT = a; :}
+| CREARTEXTOA PARIZQ OPER:a PARDER {: RESULT = new TextA(a.toString()); :}
+| CREARTEXTOB PARIZQ OPER:a PARDER {: RESULT = new TextB(a.toString()); :}
+| CREARIMAGEN PARIZQ IMG_BODY:a PARDER {: RESULT = a; :}
+| CREARTABLA PARIZQ TBL_BODY:a PARDER {: RESULT = new Table(a,false); :}
+| CREARBOTON PARIZQ OPER:a COMMA OPER:b PARDER {: RESULT = new Button(b.toString(),a.toString()); :};
 
 SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
 {:
@@ -382,6 +356,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
                     ((Paragraph)var.getComponente()).setAlineado(Align.JUSTIFY);
                     break;
             }
+            break;
         }
     }
 :}
@@ -404,6 +379,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
                     ((TextB)var.getComponente()).setTexto(b.toString());
                     break;
             }
+            break;
         }
     }
 :}
@@ -415,6 +391,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
             ((Image)var.getComponente()).setPath(b.toString());
+            break;
         }
     }
 :}
@@ -426,6 +403,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
             ((Image)var.getComponente()).setAlto( (int) Double.parseDouble(b.toString()));
+            break;
         }
     }
 :}
@@ -437,6 +415,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
             ((Image)var.getComponente()).setAncho( (int) Double.parseDouble(b.toString()));
+            break;
         }
     }
 :}
@@ -448,6 +427,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
             ((Button)var.getComponente()).setTexto(b.toString());
+            break;
         }
     }
 :}
@@ -459,6 +439,7 @@ SET_STRUCT::= ESTRUCTURA:a DOT SETALINEACION PARIZQ OPER:b PARDER
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
             ((Table)var.getComponente()).setBorde(Boolean.parseBoolean(b.toString()));
+            break;
         }
     }
 :};
@@ -521,11 +502,12 @@ GET_STRUCT::= ESTRUCTURA:a DOT GETALINEACION PARIZQ PARDER
     //Castea el identifcador
     String temp = a.toString().substring(1);
     //Contendrá el RESULT
-    Object res = "";
+    String res = "";
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
             res = ((Image)var.getComponente()).getPath();
+            System.out.println(res);
         }
     }
     RESULT = res;
@@ -549,7 +531,7 @@ GET_STRUCT::= ESTRUCTURA:a DOT GETALINEACION PARIZQ PARDER
     //Castea el identifcador
     String temp = a.toString().substring(1);
     //Contendrá el RESULT
-    Object res = "";
+    Object res = null;
     //Procede a buscarlos en la lista de variables
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
@@ -595,6 +577,7 @@ INSERT_STRUCT::= ESTRUCTURA:a DOT INSERTAR PARIZQ PARDER {:
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
             res = var.getComponente().getHtml();
+            break;
         }
     }
     RESULT = res;
@@ -626,9 +609,9 @@ PAR_BODY::= OPER:a COMMA OPER:b {:
     RESULT = new Paragraph(a.toString());
 :};
 
-IMG_BODY::= OPER:a COMMA OPER:b COMMA OPER:c {: RESULT = new Image(a.toString(),(int) Double.parseDouble(b.toString()), (int) Double.parseDouble(c.toString()));:}
-| OPER:a COMMA OPER:b {: RESULT = new Image(a.toString(),(int) Double.parseDouble(b.toString()), Dimension.ALTO );:}
-| OPER:a {: RESULT = new Image(a.toString());:};
+IMG_BODY::= OPER:a COMMA OPER:b COMMA OPER:c {: System.out.println("uwu"); RESULT = new Image(a.toString(),(int) Double.parseDouble(b.toString()), (int) Double.parseDouble(c.toString()));:}
+| OPER:a COMMA OPER:b {: System.out.println("uw2u"); RESULT = new Image(a.toString(),(int) Double.parseDouble(b.toString()), Dimension.ALTO );:}
+| OPER:a {: System.out.println("uw3u"); RESULT = new Image(a.toString());:};
 
 TBL_BODY::= TBL_BODY:a COMMA CORIZQ TBL_SUBBODY:b CORDER
 {:
@@ -651,6 +634,7 @@ BOTON_STRUCT::= ESTRUCTURA:a DOT CLICKBOTON PARIZQ OPER:b PARDER
     for (Estructura var : listaEstrucutra){
         if (var.getIdentificador().equals(temp)){
             ((Button)var.getComponente()).setAlerta(b.toString());
+            break;
         }
     }
 :};
@@ -687,7 +671,7 @@ IF_BODY::= IF_BODY:a IF_SUBBODY:b {: RESULT = a.toString() + b.toString(); :}
     RESULT = a;
 :};
 
-IF_SUBBODY::= INSERT_STRUCT:a {:RESULT = a; :}
+IF_SUBBODY::= INSERT_STRUCT:a SEMICOLON {:RESULT = a; :}
 | HS_IF:a {: RESULT = a; :}
 | HS_REPETIR:a {:RESULT = a; :};
 

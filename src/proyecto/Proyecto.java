@@ -22,7 +22,9 @@ import analyzer.Token;
 import html.hscript.Variable;
 import java.awt.Desktop;
 import java.io.StringReader;
-import java.util.LinkedList;
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JComboBox;
 import static javax.swing.JOptionPane.showMessageDialog;
 import javax.swing.table.DefaultTableModel;
@@ -36,10 +38,10 @@ public class Proyecto extends javax.swing.JFrame {
     private String nameFile = "";
     private JFileChooser jabrir = new JFileChooser();
     private JFileChooser jsave = new JFileChooser();
-    private File tkErrores = null;
-    private File tkLexico = null;
-    private File tkSintactico = null;
-    private File fileHTML = null;
+    private String tkErrores = null;
+    private String tkLexico = null;
+    private String tkSintactico = null;
+    private String fileHTML = null;
 
     /**
      * Creates new form proyecto
@@ -47,6 +49,7 @@ public class Proyecto extends javax.swing.JFrame {
     public Proyecto() {
         initComponents();
         this.editHtml.setEditable(false);
+        this.editHtml.setContentType("text/html");
         this.txtResult.setEditable(false);
     }
 
@@ -84,6 +87,7 @@ public class Proyecto extends javax.swing.JFrame {
         panelHTMLView = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
         editHtml = new javax.swing.JEditorPane();
+        jPanel1 = new javax.swing.JPanel();
         sepResult = new javax.swing.JSeparator();
         tabBottom = new javax.swing.JTabbedPane();
         panelConsole = new javax.swing.JPanel();
@@ -209,6 +213,7 @@ public class Proyecto extends javax.swing.JFrame {
         gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 10, 10);
         panelHTMLView.add(jScrollPane5, gridBagConstraints);
+        panelHTMLView.add(jPanel1, new java.awt.GridBagConstraints());
 
         tabOutputBottom.addTab("Vista HTML", panelHTMLView);
 
@@ -356,6 +361,11 @@ public class Proyecto extends javax.swing.JFrame {
         menuAyuda.add(itemUsuario);
 
         itemTecnico.setText("Manual técnico");
+        itemTecnico.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                itemTecnicoActionPerformed(evt);
+            }
+        });
         menuAyuda.add(itemTecnico);
         menuAyuda.add(jSeparator4);
 
@@ -374,8 +384,10 @@ public class Proyecto extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
     /**
-     * Guarda el archivo actual, si no existe un archivo actual solicita al usuario a guardar un nuevo
-     * @param evt 
+     * Guarda el archivo actual, si no existe un archivo actual solicita al
+     * usuario a guardar un nuevo
+     *
+     * @param evt
      */
     private void itemGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemGuardarActionPerformed
         // TODO add your handling code here:
@@ -386,9 +398,10 @@ public class Proyecto extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_itemGuardarActionPerformed
     /**
-     * Solicita al usuario guardar el archivo actual, o si ya existe solo lo guarda
-     * Limpia la dirección del archivo actual y limpia el txtInput
-     * @param evt 
+     * Solicita al usuario guardar el archivo actual, o si ya existe solo lo
+     * guarda Limpia la dirección del archivo actual y limpia el txtInput
+     *
+     * @param evt
      */
     private void itemNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemNuevoActionPerformed
         // TODO add your handling code here:
@@ -405,7 +418,8 @@ public class Proyecto extends javax.swing.JFrame {
     }//GEN-LAST:event_itemNuevoActionPerformed
     /**
      * Despliega un mensaje con mi información uwu
-     * @param evt 
+     *
+     * @param evt
      */
     private void itemAcercaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAcercaActionPerformed
         // TODO add your handling code here:
@@ -413,15 +427,18 @@ public class Proyecto extends javax.swing.JFrame {
     }//GEN-LAST:event_itemAcercaActionPerformed
     /**
      * Guarda el archivo actual
-     * @param evt 
+     *
+     * @param evt
      */
     private void itemGuardarComoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemGuardarComoActionPerformed
         // TODO add your handling code here:
         this.guardarComo();
     }//GEN-LAST:event_itemGuardarComoActionPerformed
     /**
-     * Despliega un filechooser para especificar la dirección del archivo a abrir
-     * @param evt 
+     * Despliega un filechooser para especificar la dirección del archivo a
+     * abrir
+     *
+     * @param evt
      */
     private void itemAbrirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAbrirActionPerformed
         // TODO add your handling code here:
@@ -466,48 +483,66 @@ public class Proyecto extends javax.swing.JFrame {
         //Instancia un objeto de Scanner
         //Luego instancia un objeto parser
         //Recupera las listas u objetos que generó el parser
+        html.Html file = null;
         Scanner scan = new analyzer.Scanner(new BufferedReader(new StringReader(this.txtInput.getText())));
-        //Realiza el informe léxico
-        this.construirInformeLexico(scan);
-        Parser parser = new Parser(scan);
+        Parser parser = new analyzer.Parser(scan);
         try {
             parser.parse();
+            //Realiza el informe léxico
+            this.construirInformeLexico(scan);
             //Realiza el inform sintáctico
             this.construirInformeSintactico(parser);
             //Llena la tabla de variables
             this.llenarTabla(parser);
             //Genera el archivo de salida
-            this.makeFile(parser.html_file.getHtml(), "ArchivoResultante.html", this.fileHTML);
+            file = parser.html_file;
         } catch (Exception ex) {
             showMessageDialog(this, ex.getMessage() + " " + ex.getLocalizedMessage() + " ", "[OLC1] Proyecto 1 - Parser", JOptionPane.ERROR_MESSAGE);
         }
+
+        try {
+            String contenido = file.getHtml();
+            this.fileHTML = this.makeFile(contenido, "ArchivoResultante.html").getAbsolutePath();
+            String output = "", linea = "";
+            FileReader fileReader = new FileReader(this.fileHTML);
+            try (BufferedReader bfReader = new BufferedReader(fileReader)) {
+                while ((linea = bfReader.readLine()) != null) {
+                    output += linea + "\n";
+                }
+                this.txtResult.setText(output);
+                this.editHtml.setPage(  (new File(this.fileHTML)).toURI().toURL() );
+            }
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Ocurrió un error al leer el archivo.\n" + ex.getMessage(), "[OLC1] - Practica 1", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_itemCompilarActionPerformed
     /**
-     * 
-     * @param evt 
+     *
+     * @param evt
      */
     private void btnAbrirNavegadorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAbrirNavegadorActionPerformed
         // TODO add your handling code here:
-        try{
-            switch( ( (JComboBox) evt.getSource()).getSelectedIndex()){
+        try {
+            switch ( this.cmbActionResult.getSelectedIndex()) {
                 case 0:
-                    Desktop.getDesktop().browse(this.fileHTML.toURI());
+                    Desktop.getDesktop().open(new File(this.fileHTML));                    
                     break;
                 case 1:
-                    Desktop.getDesktop().browse(this.tkLexico.toURI());
+                    Desktop.getDesktop().open(new File(this.tkLexico));
                     break;
                 case 2:
-                    Desktop.getDesktop().browse(this.tkErrores.toURI());
+                    Desktop.getDesktop().open(new File(this.tkErrores));
                     break;
                 case 3:
-                    Desktop.getDesktop().browse(this.tkSintactico.toURI());
+                    Desktop.getDesktop().open(new File(this.tkSintactico));
                     break;
             }
-        } catch(IOException e){
-            JOptionPane.showMessageDialog(this, "Nada que mostrar", "[OLC1 - Proyecto 1]", JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Nada que mostrar " + e.getMessage(), "[OLC1 - Proyecto 1]", JOptionPane.INFORMATION_MESSAGE);
         }
     }//GEN-LAST:event_btnAbrirNavegadorActionPerformed
-    
+
     /**
      * Al cambiar el indice cambiará la vista del editor pane
      *
@@ -515,28 +550,39 @@ public class Proyecto extends javax.swing.JFrame {
      */
     private void cmbActionResultItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cmbActionResultItemStateChanged
         // TODO add your handling code here:
-        try{
-            if (evt.getStateChange() == 1){
-                switch( ( (JComboBox) evt.getSource()).getSelectedIndex()){
+        try {
+            if (evt.getStateChange() == 1) {
+                switch (((JComboBox) evt.getSource()).getSelectedIndex()) {
                     case 0:
-                        this.editHtml.setPage(this.fileHTML.getAbsolutePath());
+                        this.editHtml.setPage(  (new File(this.fileHTML)).toURI().toURL() );
                         break;
                     case 1:
-                        this.editHtml.setPage(this.tkLexico.getAbsolutePath());
+                        this.editHtml.setPage( (new File(this.tkLexico)).toURI().toURL() );
                         break;
                     case 2:
-                        this.editHtml.setPage(this.tkErrores.getAbsolutePath());
+                        this.editHtml.setPage(  (new File(this.tkErrores)).toURI().toURL()  );
                         break;
                     case 3:
-                        this.editHtml.setPage(this.tkSintactico.getAbsolutePath());
+                        this.editHtml.setPage(  (new File(this.tkSintactico)).toURI().toURL() );
                         break;
                 }
+                this.editHtml.repaint();
+                this.panelHTMLView.repaint();
             }
-        } catch(IOException e){
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Nada que mostrar", "[OLC1 - Proyecto 1]", JOptionPane.INFORMATION_MESSAGE);
         }
     }//GEN-LAST:event_cmbActionResultItemStateChanged
-   
+
+    private void itemTecnicoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemTecnicoActionPerformed
+        try {
+            // TODO add your handling code here:
+            Desktop.getDesktop().open(new File("GRAMATICA_CLASES.pdf"));
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Nada que mostrar", "[OLC1 - Proyecto 1]", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }//GEN-LAST:event_itemTecnicoActionPerformed
+
     /**
      * Especifica una nueva ruta para el archivo
      */
@@ -612,10 +658,7 @@ public class Proyecto extends javax.swing.JFrame {
      *
      * @param scan
      */
-    private void construirInformeLexico(Scanner scan) {
-        //Recupera ambas listas
-        LinkedList<Token> tk = scan.LexTok;
-        LinkedList<Token> terr = scan.LexErr;
+    private void construirInformeLexico(analyzer.Scanner scanner) {
         //Desde acá se construirá la cadena HTML
         StringBuilder sb = new StringBuilder();
         //Recorre ambas listas y arma una tabla HTML
@@ -646,7 +689,7 @@ public class Proyecto extends javax.swing.JFrame {
         //este contador servirá para contar los tokens encontrados
         int contador = 1;
         //Obtiene la forma HTML del token
-        for (Token token : tk) {
+        for (Token token : scanner.LexTok) {
             sb.append(token.getToken(contador++));
         }
         sb.append("</table>");
@@ -654,7 +697,7 @@ public class Proyecto extends javax.swing.JFrame {
         sb.append("</body>\n");
         sb.append("</html>\n");
         //Manda a hacer el fichero
-        this.makeFile(sb.toString(), "Análisis_Lexico", this.tkLexico);
+        this.tkLexico = this.makeFile(sb.toString(), "Análisis_Lexico").getAbsolutePath();
         //Limpia el stringbuilder
         sb = new StringBuilder();
         //---------------Ahora realiza el mismo procedimiento
@@ -687,7 +730,7 @@ public class Proyecto extends javax.swing.JFrame {
         //reinicia el contador
         contador = 1;
         //Obtiene la forma HTML del token
-        for (Token token : terr) {
+        for (Token token : scanner.LexErr) {
             sb.append(token.getToken(contador++));
         }
         sb.append("</table>");
@@ -695,7 +738,7 @@ public class Proyecto extends javax.swing.JFrame {
         sb.append("</body>\n");
         sb.append("</html>\n");
         //Manda a hacer el fichero
-        this.makeFile(sb.toString(), "Errores_Lexicos", this.tkErrores);
+        this.tkErrores = this.makeFile(sb.toString(), "Errores_Lexicos").getAbsolutePath();
     }
 
     /**
@@ -725,7 +768,6 @@ public class Proyecto extends javax.swing.JFrame {
         sb.append("<div class=\"tg-wrap\">\n");
         sb.append("<table class=\"tg\">");
         sb.append("<tr>");
-        sb.append("<th  class=\"tg-baqh\">").append("No.").append("</th>");
         sb.append("<th  class=\"tg-baqh\" >").append("Tipo").append("</th>");
         sb.append("<th  class=\"tg-baqh\" >").append("Fila").append("</th>");
         sb.append("<th  class=\"tg-baqh\" >").append("Columa").append("</th>");
@@ -740,7 +782,7 @@ public class Proyecto extends javax.swing.JFrame {
         sb.append("</body>\n");
         sb.append("</html>\n");
         //Manda a hacer el fichero
-        this.makeFile(sb.toString(), "Errores sintácticos", this.tkSintactico);
+        this.tkSintactico = this.makeFile(sb.toString(), "Errores sintácticos").getAbsolutePath();
     }
 
     /**
@@ -748,9 +790,10 @@ public class Proyecto extends javax.swing.JFrame {
      *
      * @param cadena
      */
-    private void makeFile(String cadena, String titulo, File file) {
+    private File makeFile(String cadena, String titulo) {
         FileWriter fileWriter = null;
         BufferedWriter bfWriter = null;
+        File file = null;
         try {
             file = new File(titulo + ".html");
             fileWriter = new FileWriter(file);
@@ -770,6 +813,7 @@ public class Proyecto extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "[OLC1] - Proyecto 1", JOptionPane.ERROR_MESSAGE);
             }
         }
+        return file;
     }
 
     /**
@@ -830,6 +874,7 @@ public class Proyecto extends javax.swing.JFrame {
     private javax.swing.JMenuItem itemTecnico;
     private javax.swing.JMenuItem itemUsuario;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;

@@ -23,8 +23,9 @@ public class Room implements ComponentHTML {
     public String getHtml(){
         StringBuilder sb = new StringBuilder();
         sb.append("<div>\n");
-        while(!pilaHTML.isEmpty()){
-            sb.append(pilaHTML.poll().getHtml());
+        for(ComponentHTML component : this.pilaHTML){
+            String temp = component.getHtml();
+            sb.append(temp);
         }
         sb.append("</div>\n");
         return sb.toString();

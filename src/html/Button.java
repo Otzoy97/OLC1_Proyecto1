@@ -17,6 +17,7 @@ public class Button implements ComponentHTML {
     public Button(String texto, String identificador){
         this.texto = texto;
         this.identificador = identificador;
+        this.alerta = "";
     }
     /**
      * Devuelve un botón en formato HTML 

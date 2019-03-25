@@ -22,7 +22,12 @@ public class Html implements ComponentHTML {
     public String getHtml() {
         StringBuilder sb = new StringBuilder();
         sb.append("<!DOCTYPE html>\n");
-        sb.append("<html>\n").append(cabecera.getHtml()).append(cuerpo.getHtml()).append("</html>\n");
+        sb.append("<html>\n");
+        String temp = cabecera.getHtml();
+        sb.append(temp);
+        temp = cuerpo.getHtml();
+        sb.append(temp);
+        sb.append("</html>\n");
         return sb.toString();
     }
     

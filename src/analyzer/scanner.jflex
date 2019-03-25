@@ -6,8 +6,8 @@ import java.util.LinkedList;
 //Lista
 %%
 %{
-    public LinkedList<Token> LexErr  = new LinkedList();
-    public LinkedList<Token> LexTok = new LinkedList();
+    public  LinkedList<Token> LexErr  = new LinkedList();
+    public  LinkedList<Token> LexTok = new LinkedList();
     public String cadena = "";
 %}
 //Directivas
@@ -21,7 +21,7 @@ import java.util.LinkedList;
 %char
 %ignorecase
 %full
-%state HTML 
+%state HTML
 %state CUERPO 
 %state PARRAFO 
 %state IMAGEN 
@@ -29,12 +29,12 @@ import java.util.LinkedList;
 %state TABLA 
 %state HSCRIPT
 //RE
-ComentarioHTML = ("<!" [^/] ~"!>") |("<!" "!"+ "!>")
+ComentarioHTML = ("<!" [^>] ~"!>") |("<!" ">"+ "!>")
 Comentario = "//" [^\r\n]* [^\r\n]
 ComentarioMulti = ("/*" [^/] ~"*/") |("/*" "/"+ "*/")
 Entero = [0-9]+
 Cadena =[\"][^\"\n]*[\"\n]
-Decimal = {Entero}.{Entero}
+Decimal = {Entero}"."{Entero}
 Letra = [A-Za-z]+
 Identificador = "$" {Letra}({Letra}|{Entero}|"_")*
 Estructura = "#" {Letra}({Letra}|{Entero}|"_")*
@@ -260,27 +260,6 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
     yybegin(HSCRIPT); 
     return new Symbol(sym.HSCRIPT_INICIO,yycolumn,yyline,yytext());
 }
-<YYINITIAL> {ComentarioHTML} {}
-<YYINITIAL> {Espacio} {}
-<HTML> {
-    {ComentarioHTML} {}
-    {Espacio} {
-        String temp = cadena.substring(cadena.length() - 1, cadena.length());
-        if(!temp.equals(" ") && !temp.equals("\n") && !temp.equals("\t") && !temp.equals("\f") && !temp.equals("\r")){
-            cadena += " ";
-        }
-    }
-    [^] {
-        if(yytext().equals("<")){
-            yypushback(1);
-            yybegin(YYINITIAL);
-            LexTok.add(new Token("TEXTO PLANO",yycolumn,yyline,cadena));        
-            return new Symbol(sym.PLAINTEXT,yycolumn,yyline,cadena);
-        } else {
-            cadena += yytext();
-        }
-    }
-}
 <HSCRIPT> {
     {Comentario} {}
     {ComentarioMulti} {}
@@ -316,28 +295,28 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
         return new Symbol(sym.DIVISION,yycolumn,yyline,yytext());
     }
     "(" {
-        LexTok.add(new Token("PARDER",yycolumn,yyline,yytext()));
-        return new Symbol(sym.PARDER,yycolumn,yyline,yytext());
-    }
-    ")" {
         LexTok.add(new Token("PARIZQ",yycolumn,yyline,yytext()));
         return new Symbol(sym.PARIZQ,yycolumn,yyline,yytext());
     }
-    "{" {
-        LexTok.add(new Token("LLVDER",yycolumn,yyline,yytext()));
-        return new Symbol(sym.LLVDER,yycolumn,yyline,yytext());
+    ")" {
+        LexTok.add(new Token("PARDER",yycolumn,yyline,yytext()));
+        return new Symbol(sym.PARDER,yycolumn,yyline,yytext());
     }
-    "}" {
+    "{" {
         LexTok.add(new Token("LLVIZQ",yycolumn,yyline,yytext()));
         return new Symbol(sym.LLVIZQ,yycolumn,yyline,yytext());
     }
-    "[" {
-        LexTok.add(new Token("CORDER",yycolumn,yyline,yytext()));
-        return new Symbol(sym.CORDER,yycolumn,yyline,yytext());
+    "}" {
+        LexTok.add(new Token("LLVDER",yycolumn,yyline,yytext()));
+        return new Symbol(sym.LLVDER,yycolumn,yyline,yytext());
     }
-    "]" {
+    "[" {
         LexTok.add(new Token("CORIZQ",yycolumn,yyline,yytext()));
         return new Symbol(sym.CORIZQ,yycolumn,yyline,yytext());
+    }
+    "]" {
+        LexTok.add(new Token("CORDER",yycolumn,yyline,yytext()));
+        return new Symbol(sym.CORDER,yycolumn,yyline,yytext());
     }
     "&&" {
         LexTok.add(new Token("AND",yycolumn,yyline,yytext()));
@@ -515,8 +494,8 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
     }
     {Cadena}  
     {
-        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext()));
-        return new Symbol(sym.CADENA, yycolumn,yyline,yytext());
+        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext().substring(1,yylength()-1)));
+        return new Symbol(sym.CADENA, yycolumn,yyline,yytext().substring(1,yylength()-1));
     }
     . {
         LexErr.add(new Token("Error léxico",yychar,yyline,yytext()));
@@ -540,8 +519,8 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
         return new Symbol(sym.IGUAL,yycolumn,yyline,yytext());
     }
     {Cadena} {
-        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext()));
-        return new Symbol(sym.CADENA,yycolumn,yyline,yytext());
+        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext().substring(1,yylength()-1)));
+        return new Symbol(sym.CADENA, yycolumn,yyline,yytext().substring(1,yylength()-1));
     }
 }
 <PARRAFO> {
@@ -562,8 +541,8 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
         return new Symbol(sym.IGUAL,yycolumn,yyline,yytext());
     }
     {Cadena} {
-        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext()));
-        return new Symbol(sym.CADENA,yycolumn,yyline,yytext());
+        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext().substring(1,yylength()-1)));
+        return new Symbol(sym.CADENA, yycolumn,yyline,yytext().substring(1,yylength()-1));
     }
 }
 <IMAGEN> {
@@ -596,8 +575,8 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
         return new Symbol(sym.ENTERO, yycolumn, yyline, yytext());
     }
     {Cadena} {
-        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext()));
-        return new Symbol(sym.CADENA,yycolumn,yyline,yytext());
+        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext().substring(1,yylength()-1)));
+        return new Symbol(sym.CADENA, yycolumn,yyline,yytext().substring(1,yylength()-1));
     }
 }
 <BOTON> {
@@ -622,8 +601,8 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
         return new Symbol(sym.IGUAL,yycolumn,yyline,yytext());
     }
     {Cadena} {
-        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext()));
-        return new Symbol(sym.CADENA,yycolumn,yyline,yytext());
+        LexTok.add(new Token("CADENA",yycolumn,yyline,yytext().substring(1,yylength()-1)));
+        return new Symbol(sym.CADENA, yycolumn,yyline,yytext().substring(1,yylength()-1));
     }
 }
 <TABLA> {
@@ -652,7 +631,36 @@ HSCRIPT_FINAL = "?" ({ComentarioHTML}|{Espacio})* ">"
         return new Symbol(sym.FALSO,yycolumn,yyline,yytext());
     }
 }
+<HTML> {
+    {ComentarioHTML} {}
+    {Espacio} {
+        if (cadena.length()>0){
+            String temp = cadena.substring(cadena.length() - 1, cadena.length());
+            if(!temp.equals(" ") && !temp.equals("\n") && !temp.equals("\t") && !temp.equals("\f") && !temp.equals("\r")){
+                cadena += " ";
+                //System.out.println("Concatena espacios");
+            }
+        }
+    }
+    "<" {
+        yypushback(yylength());
+        yybegin(YYINITIAL);
+        
+        if(cadena.length()>0){
+            //System.out.println(cadena + ">" + cadena.length());
+            LexTok.add(new Token("TEXTO PLANO",yycolumn,yyline,cadena));        
+            return new Symbol(sym.PLAINTEXT,yycolumn,yyline,cadena);
+        }
+    }
+    [^] {
+        
+        cadena+= yytext().trim();
+        //System.out.println(cadena + ">" + cadena.length());
+    }
+}
+{ComentarioHTML} {}
+{Espacio} {}
 [^] {
-    cadena += yytext();
+    yypushback(yylength());
     yybegin(HTML);
 }
